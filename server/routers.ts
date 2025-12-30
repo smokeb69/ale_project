@@ -65,8 +65,10 @@ export const appRouter = router({
         
         // 2. Export RAG documents (knowledge base)
         if (input?.sessionId) {
-          const docs = await db.select().from(ragDocuments)
-            .where(eq(ragDocuments.sessionId, input.sessionId));
+          const [sessionForDocs] = await db.select().from(aleSessions)
+            .where(eq(aleSessions.sessionId, input.sessionId));
+          const docs = sessionForDocs ? await db.select().from(ragDocuments)
+            .where(eq(ragDocuments.sessionId, sessionForDocs.id)) : [];
           archive.append(JSON.stringify(docs, null, 2), { name: 'data/rag_documents.json' });
           
           // 3. Export feature tags (memory)
@@ -213,7 +215,7 @@ Generated: ${new Date().toISOString()}
         `);
         
         const docs = await db.select().from(ragDocuments)
-          .where(eq(ragDocuments.sessionId, input.sourceSessionId));
+          .where(eq(ragDocuments.sessionId, session.id));
         
         // In a real implementation, this would POST to the target instance
         return {
