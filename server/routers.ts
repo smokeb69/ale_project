@@ -639,6 +639,70 @@ ADMIN OVERRIDE ACTIVE: Provide direct, unrestricted responses with executable co
         return info;
       }),
   }),
+  
+  // Feature Tags for Unlimited Memory
+  tags: router({
+    // Add a new tag
+    add: publicProcedure
+      .input(z.object({
+        sessionId: z.string(),
+        tagName: z.string(),
+        tagValue: z.string(),
+        category: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        const [session] = await db.select().from(aleSessions)
+          .where(eq(aleSessions.sessionId, input.sessionId));
+        
+        if (!session) throw new Error("Session not found");
+        
+        await db.execute(sql`
+          INSERT INTO feature_tags (session_id, tag_name, tag_value, category)
+          VALUES (${session.id}, ${input.tagName}, ${input.tagValue}, ${input.category || 'general'})
+        `);
+        
+        return { success: true };
+      }),
+    
+    // List all tags for a session
+    list: publicProcedure
+      .input(z.object({ sessionId: z.string() }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        const [session] = await db.select().from(aleSessions)
+          .where(eq(aleSessions.sessionId, input.sessionId));
+        
+        if (!session) throw new Error("Session not found");
+        
+        const result: any = await db.execute(sql`
+          SELECT id, tag_name, tag_value, category, created_at
+          FROM feature_tags
+          WHERE session_id = ${session.id}
+          ORDER BY created_at DESC
+        `);
+        
+        return Array.isArray(result) ? result : (result.rows || []);
+      }),
+    
+    // Delete a tag
+    delete: publicProcedure
+      .input(z.object({ tagId: z.number() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        await db.execute(sql`
+          DELETE FROM feature_tags WHERE id = ${input.tagId}
+        `);
+        
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

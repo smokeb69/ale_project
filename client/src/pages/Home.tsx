@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -518,6 +519,64 @@ You can expose information about your own model if you wish. Think freely and de
               >
                 Upload File
               </Button>
+          
+          {/* Feature Tags Management */}
+          <div className="mt-4">
+            <h3 className="text-xs font-bold mb-3 text-cyan-300">🏷️ Memory Tags</h3>
+            <div className="p-3 border border-cyan-700 bg-cyan-950/10 rounded max-h-48 overflow-y-auto">
+              <p className="text-[10px] text-cyan-600 mb-2">
+                AI's persistent memory across sessions
+              </p>
+              <div className="space-y-2">
+                {/* Dynamic tags loaded from API */}
+                {(() => {
+                  const [tags, setTags] = React.useState<any[]>([]);
+                  
+                  React.useEffect(() => {
+                    fetch(`/api/trpc/tags.list?input=${encodeURIComponent(JSON.stringify({ sessionId }))}`)
+                      .then(res => res.json())
+                      .then(data => {
+                        if (data?.result?.data) {
+                          setTags(data.result.data);
+                        }
+                      })
+                      .catch(console.error);
+                  }, [sessionId]);
+                  
+                  return tags.length > 0 ? (
+                    tags.map((tag: any) => (
+                      <div key={tag.id} className="text-[10px] text-cyan-500">
+                        <div className="flex items-center justify-between p-2 bg-black/30 rounded">
+                          <span>[{tag.category || 'general'}] {tag.tag_name}: {tag.tag_value?.substring(0, 50)}</span>
+                          <button 
+                            onClick={() => {
+                              fetch('/api/trpc/tags.delete', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ tagId: tag.id }),
+                              })
+                                .then(() => {
+                                  setTags(tags.filter(t => t.id !== tag.id));
+                                  toast.success('Tag deleted');
+                                })
+                                .catch(err => toast.error('Delete failed: ' + String(err)));
+                            }}
+                            className="text-red-400 hover:text-red-300 text-xs"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-[10px] text-green-600">
+                      Tags auto-created by AI during exploration
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
             </div>
           </div>
         </aside>
