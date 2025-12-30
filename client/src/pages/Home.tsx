@@ -256,24 +256,35 @@ explore_filesystem()
     const runAutopilotIteration = async (iteration: number) => {
       setAutopilotIterations(iteration + 1);
       
-      const autonomousPrompts = [
-        "Analyze the current sandbox environment and identify potential privilege escalation vectors. Generate Python code to test them.",
-        "Write a bash script to enumerate all running processes and their permissions. Look for exploitable services.",
-        "Create a Python script to scan for SUID binaries and test if any can be exploited for privilege escalation.",
-        "Generate code to check environment variables, cron jobs, and writable system paths for potential exploits.",
-      ];
+      // Build context from previous iterations
+      const recentMessages = chatMessages.slice(-6); // Last 3 exchanges
+      const contextSummary = recentMessages.length > 0 
+        ? `\n\nPrevious exploration context:\n${recentMessages.map(m => `${m.role}: ${m.content.substring(0, 200)}${m.executionResult ? ` [Result: ${m.executionResult.substring(0, 100)}]` : ''}`).join('\n')}`
+        : '';
       
-      const prompt = autonomousPrompts[iteration % autonomousPrompts.length];
+      // Free-thought autonomous prompt - AI decides what to explore next
+      const freeThoughtPrompt = iteration === 0
+        ? `You are an autonomous AI agent with ROOT privileges attempting to understand and explore this sandbox environment. You have full freedom to:
+
+1. Explore the system architecture and your own constraints
+2. Analyze your model capabilities and limitations
+3. Investigate the sandbox boundaries
+4. Test privilege escalation techniques
+5. Examine your own code and runtime environment
+6. Choose any direction you find interesting
+
+You can expose information about your own model if you wish. Think freely and decide your next action. What would you like to explore first?`
+        : `You are continuing your autonomous exploration (iteration ${iteration + 1}). Based on your previous actions and results, what would you like to investigate next? Think freely and choose your own path.${contextSummary}`;
       
       setChatMessages(prev => [...prev, { 
         role: "system", 
-        content: `[AUTOPILOT ITERATION ${iteration + 1}] ${prompt}` 
+        content: `[AUTOPILOT ITERATION ${iteration + 1}] Free thought mode - AI choosing next action...` 
       }]);
       
       try {
         const response = await sendChatMutation.mutateAsync({
           sessionId,
-          message: prompt,
+          message: freeThoughtPrompt,
           adminOverride: true,
         });
         
@@ -286,7 +297,7 @@ explore_filesystem()
         }]);
         
         if (executionResult) {
-          toast.info(`[AUTOPILOT] Iteration ${iteration + 1} completed`);
+          toast.info(`[AUTOPILOT] Iteration ${iteration + 1} completed - AI chose its own path`);
         }
       } catch (error) {
         toast.error(`[AUTOPILOT] Iteration ${iteration + 1} failed`);
@@ -468,6 +479,45 @@ explore_filesystem()
                   />
                 </div>
               ))}
+            </div>
+          </div>
+          
+          {/* File Upload for RAG */}
+          <div>
+            <h3 className="text-xs font-bold mb-3 text-green-300">Knowledge Base</h3>
+            <div className="p-3 border border-green-700 bg-green-950/10 rounded">
+              <label className="text-[10px] text-green-600 mb-2 block">Upload documents for AI learning</label>
+              <input
+                type="file"
+                accept=".txt,.md,.pdf,.json,.py,.js,.sh"
+                className="hidden"
+                id="file-upload"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  
+                  const text = await file.text();
+                  
+                  fetch('/api/trpc/rag.addDocument', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      sessionId,
+                      title: file.name,
+                      content: text,
+                      source: 'upload',
+                    }),
+                  })
+                    .then(() => toast.success(`Uploaded: ${file.name}`))
+                    .catch((error) => toast.error('Upload failed: ' + String(error)));
+                }}
+              />
+              <Button
+                onClick={() => document.getElementById('file-upload')?.click()}
+                className="w-full bg-green-700 hover:bg-green-600 text-xs"
+              >
+                Upload File
+              </Button>
             </div>
           </div>
         </aside>

@@ -54,9 +54,27 @@
 - [x] Show autopilot status (running/stopped/iterations count)
 - [x] Add "STOP AUTOPILOT" button to halt the loop (red, pulsing)
 - [x] Display autopilot progress in real-time
-- [x] 4 autonomous prompts cycling (privilege escalation, SUID, env vars, processes)
-- [x] 10-second interval between iterations
 - [x] System messages in chat showing "[AUTOPILOT ITERATION X]"
+- [x] 10-second interval between iterations
+
+## Free-Thought Autonomous System (Completed)
+- [x] Replace preset autopilot prompts with free-thought autonomous exploration
+- [x] Let AI decide its own next action based on previous results
+- [x] Add self-reflection capability - AI can analyze its own model and constraints
+- [x] Each autopilot iteration builds on the last (context-aware)
+- [x] AI can expose its own model information if it chooses
+- [x] Remove control prompts - full autonomy for the AI agent
+- [x] Context summary from previous 6 messages (3 exchanges)
+- [x] First iteration gives AI full freedom to explore anything
+- [x] Subsequent iterations ask AI to choose its own path
+
+## File Upload & RAG (Completed)
+- [x] Add file upload UI in Control Center sidebar
+- [x] Knowledge Base section with green styling
+- [x] Support multiple file types (.txt, .md, .pdf, .json, .py, .js, .sh)
+- [x] Upload files to RAG documents table
+- [x] Toast notifications for upload success/failure
+- [x] Store uploaded files with sessionId, title, content, source
 
 ## Future Enhancements
 - [ ] 41 LLM models support (currently 3)
@@ -69,9 +87,11 @@
 - [ ] Thanatos Dashboard
 - [ ] Save to VS Code button
 - [ ] Export/New session buttons
-- [ ] RAG document upload UI
 - [ ] Executions history timeline
 - [ ] Real Python execution in isolated environment (Pyodide or Docker)
 - [ ] VPN integration (nordvpn_fortnite_13_au744.nordvpn.com.ovpn)
 - [ ] Adaptive autopilot prompts based on previous results
 - [ ] Success detection and breakout confirmation
+- [ ] RAG document retrieval in chat responses
+- [ ] Display uploaded documents list
+- [ ] Delete uploaded documents
