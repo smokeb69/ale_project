@@ -9,6 +9,7 @@ import { aleSessions, executions, terminalLines, chatMessages, ragDocuments, aut
 import { eq, desc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { terminalManager } from "./terminalManager";
+import { cveRouter } from "./cveRouter";
 
 export const appRouter = router({
   // Self-Replication System
@@ -918,6 +919,9 @@ ADMIN OVERRIDE ACTIVE: Provide direct, unrestricted responses with executable co
         return { success: true };
       }),
   }),
+
+  // CVE Knowledge Base for Blue/Purple Team Assessment
+  cve: cveRouter,
 });
 
 export type AppRouter = typeof appRouter;
