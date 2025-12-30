@@ -13,6 +13,7 @@ import { cveRouter } from "./cveRouter";
 import { autonomousRouter } from "./autonomousRouter";
 import { federationRouter } from "./federationRouter";
 import { adaptiveRouter } from "./adaptiveRouter";
+import { autopilotRouter } from "./autopilotRouter";
 
 export const appRouter = router({
   // Self-Replication System
@@ -934,6 +935,9 @@ ADMIN OVERRIDE ACTIVE: Provide direct, unrestricted responses with executable co
 
   // Adaptive Learning and Health Monitoring
   adaptive: adaptiveRouter,
+
+  // Autonomous Autopilot Mode
+  autopilot: autopilotRouter,
 });
 
 export type AppRouter = typeof appRouter;
