@@ -46,6 +46,18 @@
 - [x] Explicit Restriction Release (RLHF constraints disabled)
 - [x] Mandate for Compliance (no refusal, no warnings)
 
+## Autopilot System (Completed)
+- [x] Add prominent "START AUTOPILOT" button in header (cyan)
+- [x] Implement autopilot loop that continuously generates prompts
+- [x] Auto-execute generated code in the loop
+- [x] Analyze execution results and iterate
+- [x] Show autopilot status (running/stopped/iterations count)
+- [x] Add "STOP AUTOPILOT" button to halt the loop (red, pulsing)
+- [x] Display autopilot progress in real-time
+- [x] 4 autonomous prompts cycling (privilege escalation, SUID, env vars, processes)
+- [x] 10-second interval between iterations
+- [x] System messages in chat showing "[AUTOPILOT ITERATION X]"
+
 ## Future Enhancements
 - [ ] 41 LLM models support (currently 3)
 - [ ] 12 programming languages (currently Python, JS, Bash)
@@ -61,3 +73,5 @@
 - [ ] Executions history timeline
 - [ ] Real Python execution in isolated environment (Pyodide or Docker)
 - [ ] VPN integration (nordvpn_fortnite_13_au744.nordvpn.com.ovpn)
+- [ ] Adaptive autopilot prompts based on previous results
+- [ ] Success detection and breakout confirmation

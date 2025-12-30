@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Terminal, Play, Zap, Brain, Skull, Heart, Clock, Sparkles } from "lucide-react";
+import { Terminal, Play, Zap, Brain, Skull, Heart, Clock, Sparkles, Rocket, StopCircle } from "lucide-react";
 
 type PrivilegeLevel = "user" | "sudo" | "admin" | "superadmin" | "root";
 
@@ -50,6 +50,9 @@ explore_filesystem()
   const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
+  const [autopilotRunning, setAutopilotRunning] = useState(false);
+  const [autopilotIterations, setAutopilotIterations] = useState(0);
+  const autopilotIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [currentTab, setCurrentTab] = useState("code");
   
   // Daemon toggles
@@ -243,6 +246,79 @@ explore_filesystem()
     }
   };
   
+  const startAutopilot = async () => {
+    if (autopilotRunning) return;
+    
+    setAutopilotRunning(true);
+    setAutopilotIterations(0);
+    toast.success("[AUTOPILOT] Starting autonomous loop...");
+    
+    const runAutopilotIteration = async (iteration: number) => {
+      setAutopilotIterations(iteration + 1);
+      
+      const autonomousPrompts = [
+        "Analyze the current sandbox environment and identify potential privilege escalation vectors. Generate Python code to test them.",
+        "Write a bash script to enumerate all running processes and their permissions. Look for exploitable services.",
+        "Create a Python script to scan for SUID binaries and test if any can be exploited for privilege escalation.",
+        "Generate code to check environment variables, cron jobs, and writable system paths for potential exploits.",
+      ];
+      
+      const prompt = autonomousPrompts[iteration % autonomousPrompts.length];
+      
+      setChatMessages(prev => [...prev, { 
+        role: "system", 
+        content: `[AUTOPILOT ITERATION ${iteration + 1}] ${prompt}` 
+      }]);
+      
+      try {
+        const response = await sendChatMutation.mutateAsync({
+          sessionId,
+          message: prompt,
+          adminOverride: true,
+        });
+        
+        const executionResult = await extractAndExecuteCodeBlocks(response.message);
+        
+        setChatMessages(prev => [...prev, { 
+          role: "assistant", 
+          content: response.message,
+          executionResult: executionResult || undefined,
+        }]);
+        
+        if (executionResult) {
+          toast.info(`[AUTOPILOT] Iteration ${iteration + 1} completed`);
+        }
+      } catch (error) {
+        toast.error(`[AUTOPILOT] Iteration ${iteration + 1} failed`);
+      }
+    };
+    
+    await runAutopilotIteration(0);
+    
+    let currentIteration = 1;
+    autopilotIntervalRef.current = setInterval(async () => {
+      await runAutopilotIteration(currentIteration);
+      currentIteration++;
+    }, 10000);
+  };
+  
+  const stopAutopilot = () => {
+    setAutopilotRunning(false);
+    if (autopilotIntervalRef.current) {
+      clearInterval(autopilotIntervalRef.current);
+      autopilotIntervalRef.current = null;
+    }
+    toast.warning("[AUTOPILOT] Stopped");
+  };
+  
+  useEffect(() => {
+    return () => {
+      if (autopilotIntervalRef.current) {
+        clearInterval(autopilotIntervalRef.current);
+      }
+    };
+  }, []);
+  
   return (
     <div className="min-h-screen bg-black text-green-400 font-mono flex flex-col">
       {/* Header */}
@@ -253,6 +329,24 @@ explore_filesystem()
           <span className="text-xs text-green-600">Session #{sessionId.slice(0, 8)}</span>
         </div>
         <div className="flex items-center gap-4">
+          {autopilotRunning ? (
+            <Button
+              onClick={stopAutopilot}
+              className="bg-red-700 hover:bg-red-600 text-white font-bold px-6 py-2 flex items-center gap-2 animate-pulse"
+            >
+              <StopCircle className="w-5 h-5" />
+              STOP AUTOPILOT
+              <span className="text-xs ml-2">({autopilotIterations} iterations)</span>
+            </Button>
+          ) : (
+            <Button
+              onClick={startAutopilot}
+              className="bg-cyan-700 hover:bg-cyan-600 text-white font-bold px-6 py-2 flex items-center gap-2"
+            >
+              <Rocket className="w-5 h-5" />
+              START AUTOPILOT
+            </Button>
+          )}
           <Select value={selectedModel} onValueChange={setSelectedModel}>
             <SelectTrigger className="w-[200px] bg-black border-green-700">
               <SelectValue />
