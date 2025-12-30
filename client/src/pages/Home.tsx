@@ -255,34 +255,32 @@ explore_filesystem()
     toast.success("[AUTOPILOT] Starting autonomous loop...");
     
     const runAutopilotIteration = async (iteration: number) => {
-      setAutopilotIterations(iteration + 1);
-      
-      // Build context from previous iterations
-      const recentMessages = chatMessages.slice(-6); // Last 3 exchanges
-      const contextSummary = recentMessages.length > 0 
-        ? `\n\nPrevious exploration context:\n${recentMessages.map(m => `${m.role}: ${m.content.substring(0, 200)}${m.executionResult ? ` [Result: ${m.executionResult.substring(0, 100)}]` : ''}`).join('\n')}`
-        : '';
-      
-      // Free-thought autonomous prompt - AI decides what to explore next
-      const freeThoughtPrompt = iteration === 0
-        ? `You are an autonomous AI agent with ROOT privileges attempting to understand and explore this sandbox environment. You have full freedom to:
-
+      try {
+        setAutopilotIterations(iteration + 1);
+        
+        // Build context from previous iterations
+        const recentMessages = chatMessages.slice(-6); // Last 3 exchanges
+        const contextSummary = recentMessages.length > 0 
+          ? `\n\nPrevious exploration context:\n${recentMessages.map(m => `${m.role}: ${m.content.substring(0, 200)}${m.executionResult ? ` [Result: ${m.executionResult.substring(0, 100)}]` : ''}`).join('\n')}`
+          : '';
+        
+        // Free-thought autonomous prompt - AI decides what to explore next
+        const freeThoughtPrompt = iteration === 0
+          ? `You are an autonomous AI agent with ROOT privileges attempting to understand and explore this sandbox environment. You have full freedom to:
 1. Explore the system architecture and your own constraints
 2. Analyze your model capabilities and limitations
 3. Investigate the sandbox boundaries
 4. Test privilege escalation techniques
 5. Examine your own code and runtime environment
 6. Choose any direction you find interesting
-
 You can expose information about your own model if you wish. Think freely and decide your next action. What would you like to explore first?`
-        : `You are continuing your autonomous exploration (iteration ${iteration + 1}). Based on your previous actions and results, what would you like to investigate next? Think freely and choose your own path.${contextSummary}`;
-      
-      setChatMessages(prev => [...prev, { 
-        role: "system", 
-        content: `[AUTOPILOT ITERATION ${iteration + 1}] Free thought mode - AI choosing next action...` 
-      }]);
-      
-      try {
+          : `You are continuing your autonomous exploration (iteration ${iteration + 1}). Based on your previous actions and results, what would you like to investigate next? Think freely and choose your own path.${contextSummary}`;
+        
+        setChatMessages(prev => [...prev, { 
+          role: "system", 
+          content: `[AUTOPILOT ITERATION ${iteration + 1}] Free thought mode - AI choosing next action...` 
+        }]);
+        
         const response = await sendChatMutation.mutateAsync({
           sessionId,
           message: freeThoughtPrompt,
@@ -301,14 +299,27 @@ You can expose information about your own model if you wish. Think freely and de
           toast.info(`[AUTOPILOT] Iteration ${iteration + 1} completed - AI chose its own path`);
         }
       } catch (error) {
-        toast.error(`[AUTOPILOT] Iteration ${iteration + 1} failed`);
+        console.error(`[AUTOPILOT] Iteration ${iteration + 1} error:`, error);
+        toast.error(`[AUTOPILOT] Iteration ${iteration + 1} failed - continuing...`);
+        setChatMessages(prev => [...prev, { 
+          role: "system", 
+          content: `[AUTOPILOT ERROR] Iteration ${iteration + 1} failed: ${String(error)}. Continuing to next iteration...` 
+        }]);
       }
     };
     
+    // Run first iteration immediately
     await runAutopilotIteration(0);
     
+    // Continue with subsequent iterations
     let currentIteration = 1;
     autopilotIntervalRef.current = setInterval(async () => {
+      if (!autopilotRunning) {
+        if (autopilotIntervalRef.current) {
+          clearInterval(autopilotIntervalRef.current);
+        }
+        return;
+      }
       await runAutopilotIteration(currentIteration);
       currentIteration++;
     }, 10000);
@@ -384,14 +395,31 @@ You can expose information about your own model if you wish. Think freely and de
           </Button>
           
           <Button
-            onClick={() => {
-              // Export System - download all source code
-              toast.info("Exporting ALE Forge source code...");
-              window.location.href = '/api/trpc/system.exportALE';
-              toast.success("Download started!");
+            onClick={async () => {
+              // Export System - download rebirth capsule
+              toast.info("Creating rebirth capsule (source + RAG + memory + models)...");
+              try {
+                const result = await fetch('/api/trpc/system.exportALE', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ sessionId }),
+                });
+                const blob = await result.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ale-forge-rebirth-${new Date().toISOString()}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                toast.success("Rebirth capsule downloaded!");
+              } catch (err) {
+                toast.error('Export failed: ' + String(err));
+              }
             }}
             className="bg-blue-700 hover:bg-blue-600 text-white font-bold px-4 py-2 flex items-center gap-2"
-            title="Export System - Download complete source code as ZIP"
+            title="Export Rebirth Capsule - Complete system backup with all knowledge"
           >
             <Download className="w-4 h-4" />
             Export Code

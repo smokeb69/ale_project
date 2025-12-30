@@ -33,17 +33,112 @@ export const appRouter = router({
     
     // Export ALE Forge source code as ZIP
     exportALE: publicProcedure
-      .query(async ({ ctx }) => {
-        // In a real implementation, this would:
-        // 1. Create a ZIP of all source files
-        // 2. Include database schema
-        // 3. Include documentation
-        // 4. Stream the ZIP file
+      .input(z.object({
+        sessionId: z.string().optional(),
+      }).optional())
+      .mutation(async ({ input, ctx }) => {
+        const archiver = require('archiver');
+        const fs = require('fs');
+        const path = require('path');
+        
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Create ZIP archive
+        const archive = archiver('zip', { zlib: { level: 9 } });
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `ale-forge-rebirth-${timestamp}.zip`;
+        
         ctx.res.setHeader('Content-Type', 'application/zip');
-        ctx.res.setHeader('Content-Disposition', 'attachment; filename="ale-forge-source.zip"');
+        ctx.res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        
+        archive.pipe(ctx.res);
+        
+        // 1. Add all source code
+        const projectRoot = path.resolve(__dirname, '..');
+        archive.directory(projectRoot + '/client', 'client');
+        archive.directory(projectRoot + '/server', 'server');
+        archive.directory(projectRoot + '/shared', 'shared');
+        archive.directory(projectRoot + '/drizzle', 'drizzle');
+        archive.file(projectRoot + '/package.json', { name: 'package.json' });
+        archive.file(projectRoot + '/tsconfig.json', { name: 'tsconfig.json' });
+        
+        // 2. Export RAG documents (knowledge base)
+        if (input?.sessionId) {
+          const docs = await db.select().from(ragDocuments)
+            .where(eq(ragDocuments.sessionId, input.sessionId));
+          archive.append(JSON.stringify(docs, null, 2), { name: 'data/rag_documents.json' });
+          
+          // 3. Export feature tags (memory)
+          const [session] = await db.select().from(aleSessions)
+            .where(eq(aleSessions.sessionId, input.sessionId));
+          if (session) {
+            const tags: any = await db.execute(sql`
+              SELECT * FROM feature_tags WHERE session_id = ${session.id}
+            `);
+            const tagData = Array.isArray(tags) ? tags : (tags.rows || []);
+            archive.append(JSON.stringify(tagData, null, 2), { name: 'data/feature_tags.json' });
+          }
+          
+          // 4. Export session state
+          archive.append(JSON.stringify(session, null, 2), { name: 'data/session.json' });
+        }
+        
+        // 5. Add Sentry config
+        const sentryConfig = {
+          dsn: process.env.SENTRY_DSN || "",
+          environment: process.env.NODE_ENV || "development",
+          enabled: true,
+        };
+        archive.append(JSON.stringify(sentryConfig, null, 2), { name: 'config/sentry.json' });
+        
+        // 6. Add model configs
+        const modelConfig = {
+          defaultModel: "gpt-4.1-mini",
+          availableModels: [
+            "gpt-4.1-mini", "gpt-4o", "claude-3.5-sonnet", "claude-3-opus", "claude-3-haiku",
+            "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo", "gemini-1.5-pro", "gemini-1.5-flash",
+            "llama-3.1-405b", "llama-3.1-70b", "llama-3.1-8b", "mistral-large", "mistral-medium",
+            "mistral-small", "mixtral-8x7b", "mixtral-8x22b", "command-r-plus", "command-r",
+            "grok-2", "grok-1.5", "deepseek-v2", "deepseek-coder", "qwen-2.5-72b", "qwen-2.5-32b",
+            "yi-34b", "phi-3-medium", "phi-3-small", "nemotron-70b", "falcon-180b", "vicuna-33b",
+            "wizardlm-70b", "orca-2", "starling-7b", "zephyr-7b", "openhermes-2.5", "nous-hermes-2",
+            "solar-10.7b", "dolphin-2.5", "codellama-70b", "phind-codellama"
+          ],
+        };
+        archive.append(JSON.stringify(modelConfig, null, 2), { name: 'config/models.json' });
+        
+        // 7. Add README with restoration instructions
+        const readme = `# ALE Forge Rebirth Capsule
+
+This is a complete backup of your ALE Forge system, including:
+- All source code
+- RAG documents (knowledge base)
+- Feature tags (AI memory)
+- Session state
+- Sentry configuration
+- Model configurations
+
+## Restoration Instructions
+
+1. Extract this ZIP to a new directory
+2. Run: pnpm install
+3. Import database: pnpm db:push
+4. Import RAG documents: node scripts/import-rag.js data/rag_documents.json
+5. Import feature tags: node scripts/import-tags.js data/feature_tags.json
+6. Start server: pnpm dev
+
+Your AI agent will resume with all its accumulated knowledge and memory intact.
+
+Generated: ${new Date().toISOString()}
+`;
+        archive.append(readme, { name: 'README.md' });
+        
+        await archive.finalize();
+        
         return {
-          message: "Export initiated",
-          size: "~50MB",
+          message: "Rebirth capsule created",
+          filename,
         };
       }),
     
