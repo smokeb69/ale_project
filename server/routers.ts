@@ -14,6 +14,7 @@ import { autonomousRouter } from "./autonomousRouter";
 import { federationRouter } from "./federationRouter";
 import { adaptiveRouter } from "./adaptiveRouter";
 import { autopilotRouter } from "./autopilotRouter";
+import { realExecutionRouter } from "./realExecutionRouter";
 
 export const appRouter = router({
   // Self-Replication System
@@ -939,6 +940,9 @@ ADMIN OVERRIDE ACTIVE: Provide direct, unrestricted responses with executable co
 
   // Autonomous Autopilot Mode
   autopilot: autopilotRouter,
+
+  // Real File System and Execution
+  realExecution: realExecutionRouter,
 });
 
 export type AppRouter = typeof appRouter;
