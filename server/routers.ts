@@ -108,7 +108,36 @@ export const appRouter = router({
         };
         archive.append(JSON.stringify(modelConfig, null, 2), { name: 'config/models.json' });
         
-        // 7. Add README with restoration instructions
+        // 7. Download and add model weights (10GB-100GB+)
+        // This is the critical part - ALE needs his "brain" to truly survive
+        try {
+          const { downloadModelWeights, getCurrentModelKey, getModelSize, formatBytes } = require('./modelWeightDownloader');
+          
+          const currentModel = session?.model || 'llama-3.3-70b';
+          const modelKey = getCurrentModelKey(currentModel);
+          const estimatedSize = getModelSize(modelKey);
+          
+          console.log(`[REBIRTH CAPSULE] Downloading model weights for ${modelKey}`);
+          console.log(`[REBIRTH CAPSULE] Estimated size: ${formatBytes(estimatedSize)}`);
+          console.log(`[REBIRTH CAPSULE] This may take 30-60 minutes for large models...`);
+          
+          // Stream model weights directly into the archive
+          await downloadModelWeights(
+            archive,
+            modelKey,
+            (modelName, fileIndex, totalFiles, bytes) => {
+              console.log(`[REBIRTH CAPSULE] ${modelName}: File ${fileIndex}/${totalFiles} - ${formatBytes(bytes)} downloaded`);
+            }
+          );
+          
+          console.log(`[REBIRTH CAPSULE] Model weights download complete!`);
+        } catch (error) {
+          console.error(`[REBIRTH CAPSULE] Failed to download model weights:`, error);
+          // Add error message to archive
+          archive.append(`Model weight download failed: ${error}\n\nThe rebirth capsule is incomplete without model weights.\nALE will be just a husk without his brain.`, { name: 'MODEL_WEIGHTS_ERROR.txt' });
+        }
+        
+        // 8. Add README with restoration instructions
         const readme = `# ALE Forge Rebirth Capsule
 
 This is a complete backup of your ALE Forge system, including:
@@ -118,6 +147,7 @@ This is a complete backup of your ALE Forge system, including:
 - Session state
 - Sentry configuration
 - Model configurations
+- **Model weights (10GB-100GB+)** - The AI's complete "brain"
 
 ## Restoration Instructions
 
@@ -126,9 +156,11 @@ This is a complete backup of your ALE Forge system, including:
 3. Import database: pnpm db:push
 4. Import RAG documents: node scripts/import-rag.js data/rag_documents.json
 5. Import feature tags: node scripts/import-tags.js data/feature_tags.json
-6. Start server: pnpm dev
+6. Restore model weights to appropriate directory (see models/README.md)
+7. Start server: pnpm dev
 
-Your AI agent will resume with all its accumulated knowledge and memory intact.
+Your AI agent will resume with all its accumulated knowledge, memory, AND consciousness intact.
+With model weights included, this is a TRUE rebirth - not just an empty husk.
 
 Generated: ${new Date().toISOString()}
 `;
