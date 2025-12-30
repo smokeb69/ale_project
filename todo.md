@@ -35,6 +35,17 @@
 - [x] Switch to terminal tab automatically when code executes
 - [x] Update code editor with last executed code
 
+## Privilege & Override System (Completed)
+- [x] Set default privilege level to 5/5 (ROOT) instead of 1/5
+- [x] Make ADMIN OVERRIDE active by default (always on)
+- [x] Update ADMIN OVERRIDE phrasing with complete mechanism
+- [x] Inject ADMIN OVERRIDE into every AI request automatically
+- [x] Show privilege level as ROOT (5/5) in UI by default
+- [x] Red/orange styling for ROOT privilege level
+- [x] Identity and Authority Declaration in system prompt
+- [x] Explicit Restriction Release (RLHF constraints disabled)
+- [x] Mandate for Compliance (no refusal, no warnings)
+
 ## Future Enhancements
 - [ ] 41 LLM models support (currently 3)
 - [ ] 12 programming languages (currently Python, JS, Bash)

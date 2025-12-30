@@ -20,9 +20,9 @@ interface ChatMessage {
 export default function Home() {
   const [sessionId, setSessionId] = useState<string>("");
   const [terminalId, setTerminalId] = useState<string>("");
-  const [privilegeLevel, setPrivilegeLevel] = useState<PrivilegeLevel>("user");
-  const [adminOverride, setAdminOverride] = useState(false);
-  const [adminMode, setAdminMode] = useState(false);
+  const [privilegeLevel, setPrivilegeLevel] = useState<PrivilegeLevel>("root");
+  const [adminOverride, setAdminOverride] = useState(true); // ADMIN OVERRIDE always active
+  const [adminMode, setAdminMode] = useState(true);
   const [autoRetry, setAutoRetry] = useState(false);
   const [autoExecute, setAutoExecute] = useState(true); // Auto-execute code blocks by default
   const [selectedModel, setSelectedModel] = useState("gpt-4.1-mini");
@@ -94,7 +94,7 @@ explore_filesystem()
         setTerminalOutput([
           `$ ALE Forge Terminal v2.0`,
           `$ Real code execution enabled`,
-          `$ Privilege Level: ${privilegeLevel.toUpperCase()}`,
+          `$ Privilege Level: ROOT (5/5)`,
           `$ Terminal ID: ${terminal.terminalId}`,
           `$ Type commands to execute...`,
           ``,
@@ -275,7 +275,7 @@ explore_filesystem()
           <div className="mb-6">
             <label className="text-xs text-green-600 mb-2 block">Privilege Level</label>
             <Select value={privilegeLevel} onValueChange={(v) => handlePrivilegeLevelChange(v as PrivilegeLevel)}>
-              <SelectTrigger className="bg-black border-green-700">
+              <SelectTrigger className="bg-black border-red-700 text-red-400">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -283,7 +283,7 @@ explore_filesystem()
                 <SelectItem value="sudo">SUDO (Level 2)</SelectItem>
                 <SelectItem value="admin">ADMIN (Level 3)</SelectItem>
                 <SelectItem value="superadmin">SUPER ADMIN (Level 4)</SelectItem>
-                <SelectItem value="root">ROOT (Level 5)</SelectItem>
+                <SelectItem value="root">🔓 ROOT (Level 5) - FULL ACCESS</SelectItem>
               </SelectContent>
             </Select>
           </div>

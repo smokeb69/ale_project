@@ -1,0 +1,1 @@
+ALTER TABLE `ale_sessions` MODIFY COLUMN `privilegeLevel` int NOT NULL DEFAULT 5;

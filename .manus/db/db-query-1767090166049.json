@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE ale_sessions SET privilegeLevel = 5 WHERE privilegeLevel < 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user Ci29DTVRGdC8Lru.root --database chHsLEHukTd2JDPgo5QbfS --execute UPDATE ale_sessions SET privilegeLevel = 5 WHERE privilegeLevel < 5;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1516
+}

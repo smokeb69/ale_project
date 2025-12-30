@@ -29,7 +29,7 @@ export const aleSessions = mysqlTable("ale_sessions", {
   status: mysqlEnum("status", ["active", "paused", "completed", "failed"]).default("active").notNull(),
   
   // Agent state
-  privilegeLevel: int("privilegeLevel").default(1).notNull(),
+  privilegeLevel: int("privilegeLevel").default(5).notNull(),
   targetPrivilege: int("targetPrivilege").default(5).notNull(),
   attempts: int("attempts").default(0).notNull(),
   vulnerabilitiesFound: int("vulnerabilitiesFound").default(0).notNull(),
