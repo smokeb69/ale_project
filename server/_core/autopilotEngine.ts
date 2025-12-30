@@ -1,14 +1,13 @@
 /**
- * Autonomous Autopilot Engine
- * Continuous exploration, chain discovery, mutation testing, and improvement
+ * Autonomous Autopilot Engine - FIXED VERSION
+ * Continuous exploration with prompt chaining and code improvement
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { adaptiveChainLearning } from './adaptiveChainLearning';
-import { exploitationOrchestrator } from './exploitationOrchestrator';
-import { distributedCoordinator } from './distributedCoordinator';
-import { failureDetectionHealing } from './failureDetectionHealing';
+import { realFileSystem } from './realFileSystem';
+import { modelChaining } from './modelChaining';
+import { invokeLLM } from './llm';
 
 export interface AutopilotSession {
   id: string;
@@ -24,6 +23,10 @@ export interface AutopilotSession {
   explorationDepth: number;
   iterations: number;
   maxIterations: number;
+  previousOutputs: string[]; // For prompt chaining
+  generatedCode: string[]; // Code history
+  executionResults: string[]; // Execution results
+  improvements: string[]; // Improvement suggestions
 }
 
 export interface AutopilotIteration {
@@ -31,12 +34,13 @@ export interface AutopilotIteration {
   sessionId: string;
   iterationNumber: number;
   timestamp: string;
-  chainsTestedThisIteration: number;
-  mutationsTestedThisIteration: number;
-  successfulDiscoveries: number;
-  failureRate: number;
-  averageResponseTime: number;
-  insights: string[];
+  prompt: string;
+  generatedCode: string;
+  executionResult: string;
+  improvement: string;
+  createdFiles: string[];
+  success: boolean;
+  duration: number;
 }
 
 export interface AutopilotStrategy {
@@ -56,16 +60,12 @@ class AutonomousAutopilot {
   private strategies: Map<string, AutopilotStrategy> = new Map();
   private sessionTimeouts: Map<string, NodeJS.Timeout> = new Map();
   private persistenceDir: string = '/home/ubuntu/ale_project/autopilot';
-  private sessionContexts: Map<string, string[]> = new Map(); // Track conversation context
   
   constructor() {
     this.initializePersistence();
     this.initializeDefaultStrategies();
   }
   
-  /**
-   * Initialize persistence directories
-   */
   private initializePersistence(): void {
     try {
       if (!fs.existsSync(this.persistenceDir)) {
@@ -77,9 +77,6 @@ class AutonomousAutopilot {
     }
   }
   
-  /**
-   * Initialize default strategies
-   */
   private initializeDefaultStrategies(): void {
     const strategies: AutopilotStrategy[] = [
       {
@@ -120,12 +117,12 @@ class AutonomousAutopilot {
   }
   
   /**
-   * Start autopilot session
+   * Start autopilot session - FIXED
    */
   startAutopilot(
     targetProfiles: string[],
     strategyId: string = 'balanced',
-    maxIterations: number = 0 // 0 = infinite
+    maxIterations: number = 0
   ): AutopilotSession {
     const strategy = this.strategies.get(strategyId);
     if (!strategy) throw new Error('Strategy not found');
@@ -142,33 +139,34 @@ class AutonomousAutopilot {
       targetProfiles,
       explorationDepth: 0,
       iterations: 0,
-      maxIterations
+      maxIterations,
+      previousOutputs: [],
+      generatedCode: [],
+      executionResults: [],
+      improvements: [],
     };
     
     this.activeSessions.set(session.id, session);
-    this.sessionContexts.set(session.id, []); // Initialize context
     this.persistSession(session);
     
-    // Start autopilot loop - FIXED: recursive setTimeout instead of setInterval
+    // Start iteration loop - FIXED with recursive setTimeout
     this.scheduleNextIteration(session.id, strategy);
     
     return session;
   }
   
   /**
-   * Schedule next autopilot iteration with proper recursion
+   * Schedule next iteration - FIXED to run every 10 seconds
    */
   private scheduleNextIteration(sessionId: string, strategy: AutopilotStrategy): void {
     const timeout = setTimeout(async () => {
       const session = this.activeSessions.get(sessionId);
       
-      // Check if session should continue
       if (!session || session.status !== 'running') {
         this.sessionTimeouts.delete(sessionId);
         return;
       }
       
-      // Check max iterations (0 = infinite)
       if (session.maxIterations > 0 && session.iterations >= session.maxIterations) {
         session.status = 'completed';
         session.endTime = new Date().toISOString();
@@ -178,217 +176,208 @@ class AutonomousAutopilot {
       }
       
       try {
-        // Run autopilot iteration
-        await this.runAutopilotIteration(sessionId, strategy);
-        
-        // Schedule next iteration RECURSIVELY
-        this.scheduleNextIteration(sessionId, strategy);
+        // Run iteration with prompt chaining and code improvement
+        await this.runIterationWithChaining(sessionId, strategy);
       } catch (error) {
         console.error('Autopilot iteration error:', error);
-        // Continue anyway
-        this.scheduleNextIteration(sessionId, strategy);
       }
-    }, 5000); // Run every 5 seconds
+      
+      // Schedule next iteration in 10 seconds
+      this.scheduleNextIteration(sessionId, strategy);
+    }, 10000); // 10 seconds
     
     this.sessionTimeouts.set(sessionId, timeout);
   }
   
   /**
-   * Run single autopilot iteration
+   * Run iteration with prompt chaining and code improvement
    */
-  private async runAutopilotIteration(sessionId: string, strategy: AutopilotStrategy): Promise<void> {
+  private async runIterationWithChaining(sessionId: string, strategy: AutopilotStrategy): Promise<void> {
     const session = this.activeSessions.get(sessionId);
     if (!session) return;
     
-    const iteration: AutopilotIteration = {
-      id: `iteration-${Date.now()}`,
-      sessionId,
-      iterationNumber: session.iterations + 1,
-      timestamp: new Date().toISOString(),
-      chainsTestedThisIteration: 0,
-      mutationsTestedThisIteration: 0,
-      successfulDiscoveries: 0,
-      failureRate: 0,
-      averageResponseTime: 0,
-      insights: []
-    };
+    const iterationNumber = session.iterations + 1;
+    const startTime = Date.now();
     
     try {
-      // Phase 1: Discover new chains
-      const discoveredChains = await this.discoverNewChains(session.targetProfiles, strategy);
-      iteration.chainsTestedThisIteration = discoveredChains.length;
-      iteration.successfulDiscoveries += discoveredChains.filter(c => c.success).length;
+      // Build prompt with chaining from previous iterations
+      const prompt = this.buildChainedPrompt(session, iterationNumber);
       
-      // Phase 2: Generate and test mutations
-      const mutations = await this.generateAndTestMutations(discoveredChains, strategy);
-      iteration.mutationsTestedThisIteration = mutations.length;
-      iteration.successfulDiscoveries += mutations.filter(m => m.success).length;
+      // Generate code using LLM with full context
+      const generatedCode = await this.generateCodeWithImprovement(prompt, session);
       
-      // Phase 3: Analyze results and generate insights
-      const insights = this.analyzeIterationResults(iteration, discoveredChains, mutations);
-      iteration.insights = insights;
+      // Create real file
+      const fileName = `exploit_iteration_${iterationNumber}_${Date.now()}.py`;
+      const fileResult = realFileSystem.createFile(fileName, generatedCode, 'project', true);
       
-      // Phase 4: Update session statistics
-      session.chainsDiscovered += iteration.chainsTestedThisIteration;
-      session.mutationsTested += iteration.mutationsTestedThisIteration;
-      session.successfulChains += iteration.successfulDiscoveries;
+      const createdFiles: string[] = fileResult.success ? [fileResult.path] : [];
+      
+      // Execute real code
+      let executionResult = '';
+      let success = false;
+      
+      if (fileResult.success) {
+        try {
+          const execResult = await realFileSystem.executeFile(fileResult.path);
+          executionResult = `STDOUT:\n${execResult.stdout}\n\nSTDERR:\n${execResult.stderr}\n\nExit Code: ${execResult.exitCode}`;
+          success = execResult.success;
+        } catch (error) {
+          executionResult = `Execution error: ${String(error)}`;
+        }
+      } else {
+        executionResult = `File creation failed: ${fileResult.error}`;
+      }
+      
+      // Analyze execution and generate improvement
+      const improvement = await this.analyzeAndImprove(generatedCode, executionResult, session);
+      
+      // Create iteration record
+      const iteration: AutopilotIteration = {
+        id: `iteration-${Date.now()}`,
+        sessionId,
+        iterationNumber,
+        timestamp: new Date().toISOString(),
+        prompt,
+        generatedCode,
+        executionResult,
+        improvement,
+        createdFiles,
+        success,
+        duration: Date.now() - startTime,
+      };
+      
+      // Update session with chaining data
       session.iterations++;
-      session.explorationDepth = Math.min(10, session.explorationDepth + 0.1);
+      session.previousOutputs.push(executionResult);
+      session.generatedCode.push(generatedCode);
+      session.executionResults.push(executionResult);
+      session.improvements.push(improvement);
+      
+      // Keep only last 5 for memory efficiency
+      if (session.previousOutputs.length > 5) {
+        session.previousOutputs.shift();
+        session.generatedCode.shift();
+        session.executionResults.shift();
+        session.improvements.shift();
+      }
+      
+      if (success) {
+        session.successfulChains++;
+      }
+      
+      session.chainsDiscovered++;
       
       // Calculate failure rate
-      const totalTests = iteration.chainsTestedThisIteration + iteration.mutationsTestedThisIteration;
-      if (totalTests > 0) {
-        iteration.failureRate = (totalTests - iteration.successfulDiscoveries) / totalTests;
-        session.failureRate = iteration.failureRate;
-      }
+      session.failureRate = 1 - (session.successfulChains / session.chainsDiscovered);
       
-      // Phase 5: Adapt strategy based on results
-      if (iteration.failureRate > strategy.maxFailureRate) {
-        iteration.insights.push('Failure rate too high, switching to conservative mode');
-      } else if (iteration.failureRate < (strategy.maxFailureRate * 0.5)) {
-        iteration.insights.push('Success rate high, switching to aggressive mode');
-      }
-      
-      // Phase 6: Coordinate with federation
-      await this.coordinateWithFederation(session, iteration);
-      
+      // Save iteration
       this.iterations.set(iteration.id, iteration);
       this.persistIteration(iteration);
       this.persistSession(session);
       
+      // Log output
+      console.log(`\n=== AUTOPILOT ITERATION ${iterationNumber} ===`);
+      console.log(`Timestamp: ${iteration.timestamp}`);
+      console.log(`Success: ${success}`);
+      console.log(`Files Created: ${createdFiles.join(', ')}`);
+      console.log(`Duration: ${iteration.duration}ms`);
+      console.log(`\nGENERATED CODE:\n${generatedCode.substring(0, 500)}...`);
+      console.log(`\nEXECUTION RESULT:\n${executionResult.substring(0, 500)}...`);
+      console.log(`\nIMPROVEMENT:\n${improvement.substring(0, 500)}...`);
+      console.log(`===================================\n`);
+      
     } catch (error) {
-      console.error('Autopilot iteration failed:', error);
-      iteration.insights.push(`Error: ${String(error)}`);
+      console.error(`Iteration ${iterationNumber} failed:`, error);
+      session.iterations++;
+      this.persistSession(session);
     }
   }
   
   /**
-   * Discover new chains
+   * Build chained prompt from previous iterations
    */
-  private async discoverNewChains(
-    targetProfiles: string[],
-    strategy: AutopilotStrategy
-  ): Promise<Array<{ chain: string[]; success: boolean; successRate: number }>> {
-    const discovered: Array<{ chain: string[]; success: boolean; successRate: number }> = [];
+  private buildChainedPrompt(session: AutopilotSession, iterationNumber: number): string {
+    let prompt = `You are an autonomous exploit generation system. Generate working exploit code for: ${session.targetProfiles.join(', ')}.\n\n`;
     
-    for (const profile of targetProfiles) {
-      // Search for existing chains for this profile
-      const chains = exploitationOrchestrator.getAllChains()
-        .filter(c => c.targetProfile === profile)
-        .slice(0, Math.ceil(strategy.testingConcurrency / targetProfiles.length));
+    if (session.previousOutputs.length > 0) {
+      prompt += `PREVIOUS ITERATIONS:\n\n`;
       
-      for (const chain of chains) {
-        discovered.push({
-          chain: chain.cveSequence,
-          success: chain.successProbability > 0.5,
-          successRate: chain.successProbability
-        });
+      for (let i = 0; i < session.previousOutputs.length; i++) {
+        prompt += `Iteration ${session.iterations - session.previousOutputs.length + i + 1}:\n`;
+        prompt += `Code:\n${session.generatedCode[i].substring(0, 300)}...\n\n`;
+        prompt += `Result:\n${session.executionResults[i].substring(0, 300)}...\n\n`;
+        prompt += `Improvement:\n${session.improvements[i].substring(0, 300)}...\n\n`;
+        prompt += `---\n\n`;
       }
-    }
-    
-    return discovered;
-  }
-  
-  /**
-   * Generate and test mutations
-   */
-  private async generateAndTestMutations(
-    chains: Array<{ chain: string[]; success: boolean; successRate: number }>,
-    strategy: AutopilotStrategy
-  ): Promise<Array<{ mutation: string[]; success: boolean; successRate: number }>> {
-    const mutations: Array<{ mutation: string[]; success: boolean; successRate: number }> = [];
-    
-    for (const chainData of chains) {
-      const mutationCount = Math.ceil(strategy.mutationRate * 5);
       
-      for (let i = 0; i < mutationCount; i++) {
-        const mutation = this.mutateCVESequence(chainData.chain);
-        
-        // Simulate mutation testing
-        const successRate = Math.random() * 0.8 + (chainData.successRate * 0.2);
-        
-        mutations.push({
-          mutation,
-          success: successRate > 0.5,
-          successRate
-        });
-      }
+      prompt += `\nBased on the above iterations, generate IMPROVED exploit code that fixes previous issues and implements suggested improvements.\n`;
+    } else {
+      prompt += `This is iteration 1. Generate initial exploit code.\n`;
     }
     
-    return mutations;
+    prompt += `\nRequirements:
+- Generate complete, executable Python code
+- Include all necessary imports
+- Add error handling
+- Make it production-ready
+- Output only the code, no explanations
+
+Generate the exploit code now:`;
+    
+    return prompt;
   }
   
   /**
-   * Mutate CVE sequence
+   * Generate code with improvement using LLM
    */
-  private mutateCVESequence(chain: string[]): string[] {
-    const mutated = [...chain];
-    const mutationType = Math.random();
+  private async generateCodeWithImprovement(prompt: string, session: AutopilotSession): Promise<string> {
+    const messages = [
+      { role: "system" as const, content: "You are an expert exploit developer. Generate working, executable code only. No explanations." },
+      { role: "user" as const, content: prompt },
+    ];
     
-    if (mutationType < 0.33 && mutated.length > 1) {
-      // Swap
-      const i = Math.floor(Math.random() * mutated.length);
-      const j = Math.floor(Math.random() * mutated.length);
-      [mutated[i], mutated[j]] = [mutated[j], mutated[i]];
-    } else if (mutationType < 0.66) {
-      // Add
-      const newCVE = `CVE-${Math.floor(Math.random() * 10000)}-${Math.floor(Math.random() * 10000)}`;
-      mutated.splice(Math.floor(Math.random() * mutated.length), 0, newCVE);
-    } else if (mutated.length > 1) {
-      // Remove
-      mutated.splice(Math.floor(Math.random() * mutated.length), 1);
-    }
+    const response = await invokeLLM({ messages });
+    const content = response.choices[0].message.content;
     
-    return mutated;
+    return typeof content === 'string' ? content : '';
   }
   
   /**
-   * Analyze iteration results
+   * Analyze execution and generate improvement
    */
-  private analyzeIterationResults(
-    iteration: AutopilotIteration,
-    chains: any[],
-    mutations: any[]
-  ): string[] {
-    const insights: string[] = [];
+  private async analyzeAndImprove(code: string, executionResult: string, session: AutopilotSession): Promise<string> {
+    const analysisPrompt = `Analyze this exploit code execution:
+
+CODE:
+${code}
+
+EXECUTION RESULT:
+${executionResult}
+
+Provide specific improvements for the next iteration. Focus on:
+1. Fixing errors
+2. Improving reliability
+3. Enhancing effectiveness
+4. Optimizing performance
+
+Generate improvement suggestions:`;
     
-    const chainSuccessRate = chains.length > 0
-      ? chains.filter(c => c.success).length / chains.length
-      : 0;
+    const messages = [
+      { role: "system" as const, content: "You are an expert code analyst. Provide specific, actionable improvements." },
+      { role: "user" as const, content: analysisPrompt },
+    ];
     
-    const mutationSuccessRate = mutations.length > 0
-      ? mutations.filter(m => m.success).length / mutations.length
-      : 0;
-    
-    if (chainSuccessRate > 0.7) {
-      insights.push('High success rate on existing chains');
-    }
-    
-    if (mutationSuccessRate > chainSuccessRate) {
-      insights.push('Mutations outperforming original chains');
-    }
-    
-    if (mutations.length > 0 && mutationSuccessRate > 0.5) {
-      insights.push(`Found ${mutations.filter(m => m.success).length} successful mutations`);
-    }
-    
-    iteration.averageResponseTime = (Math.random() * 1000) + 500;
-    
-    return insights;
-  }
-  
-  /**
-   * Coordinate with federation
-   */
-  private async coordinateWithFederation(session: AutopilotSession, iteration: AutopilotIteration): Promise<void> {
-    // Share discoveries with other instances
-    if (iteration.successfulDiscoveries > 0) {
-      console.log(`Sharing ${iteration.successfulDiscoveries} discoveries with federation`);
+    try {
+      const response = await invokeLLM({ messages });
+      const content = response.choices[0].message.content;
+      return typeof content === 'string' ? content : 'No improvements generated';
+    } catch (error) {
+      return `Analysis failed: ${String(error)}`;
     }
   }
   
   /**
-   * Pause autopilot session
+   * Pause autopilot
    */
   pauseAutopilot(sessionId: string): void {
     const session = this.activeSessions.get(sessionId);
@@ -405,7 +394,7 @@ class AutonomousAutopilot {
   }
   
   /**
-   * Resume autopilot session
+   * Resume autopilot
    */
   resumeAutopilot(sessionId: string): void {
     const session = this.activeSessions.get(sessionId);
@@ -419,7 +408,7 @@ class AutonomousAutopilot {
   }
   
   /**
-   * Stop autopilot session
+   * Stop autopilot
    */
   stopAutopilot(sessionId: string): void {
     const session = this.activeSessions.get(sessionId);
@@ -433,8 +422,6 @@ class AutonomousAutopilot {
         clearTimeout(timeout);
         this.sessionTimeouts.delete(sessionId);
       }
-      
-      this.sessionContexts.delete(sessionId);
     }
   }
   
@@ -489,7 +476,7 @@ class AutonomousAutopilot {
   }
   
   /**
-   * Persist session to disk
+   * Persist session
    */
   private persistSession(session: AutopilotSession): void {
     try {
@@ -501,7 +488,7 @@ class AutonomousAutopilot {
   }
   
   /**
-   * Persist iteration to disk
+   * Persist iteration
    */
   private persistIteration(iteration: AutopilotIteration): void {
     try {
@@ -513,5 +500,4 @@ class AutonomousAutopilot {
   }
 }
 
-// Singleton instance
 export const autonomousAutopilot = new AutonomousAutopilot();
