@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Terminal, Play, Zap, Brain, Skull, Heart, Clock, Sparkles, Rocket, StopCircle } from "lucide-react";
+import { Terminal, Play, Zap, Brain, Skull, Heart, Clock, Sparkles, Rocket, StopCircle, Copy, Download } from "lucide-react";
 
 type PrivilegeLevel = "user" | "sudo" | "admin" | "superadmin" | "root";
 
@@ -359,14 +359,112 @@ You can expose information about your own model if you wish. Think freely and de
               START AUTOPILOT
             </Button>
           )}
+          
+          {/* Self-Replication Controls */}
+          <Button
+            onClick={() => {
+              // Clone ALE Forge - create a complete copy
+              toast.info("Cloning ALE Forge system...");
+              fetch('/api/trpc/system.cloneALE', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
+              })
+                .then(res => res.json())
+                .then(data => {
+                  toast.success(`ALE Forge cloned! New instance: ${data.result.data.instanceId}`);
+                })
+                .catch(err => toast.error('Clone failed: ' + String(err)));
+            }}
+            className="bg-purple-700 hover:bg-purple-600 text-white font-bold px-4 py-2 flex items-center gap-2"
+            title="Clone ALE Forge - Create a complete copy of this system"
+          >
+            <Copy className="w-4 h-4" />
+            Clone System
+          </Button>
+          
+          <Button
+            onClick={() => {
+              // Export System - download all source code
+              toast.info("Exporting ALE Forge source code...");
+              window.location.href = '/api/trpc/system.exportALE';
+              toast.success("Download started!");
+            }}
+            className="bg-blue-700 hover:bg-blue-600 text-white font-bold px-4 py-2 flex items-center gap-2"
+            title="Export System - Download complete source code as ZIP"
+          >
+            <Download className="w-4 h-4" />
+            Export Code
+          </Button>
+          
+          <Button
+            onClick={() => {
+              // Deploy New Instance
+              toast.info("Deploying new ALE instance...");
+              fetch('/api/trpc/system.deployInstance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
+              })
+                .then(res => res.json())
+                .then(data => {
+                  toast.success(`New instance deployed at: ${data.result.data.url}`);
+                })
+                .catch(err => toast.error('Deploy failed: ' + String(err)));
+            }}
+            className="bg-green-700 hover:bg-green-600 text-white font-bold px-4 py-2 flex items-center gap-2"
+            title="Deploy New Instance - Spin up additional ALE environment"
+          >
+            <Rocket className="w-4 h-4" />
+            Deploy Instance
+          </Button>
           <Select value={selectedModel} onValueChange={setSelectedModel}>
             <SelectTrigger className="w-[200px] bg-black border-green-700">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[400px] overflow-y-auto">
               <SelectItem value="gpt-4.1-mini">GPT-4.1 Mini ✓</SelectItem>
               <SelectItem value="gpt-4o">GPT-4o</SelectItem>
               <SelectItem value="claude-3.5-sonnet">Claude 3.5 Sonnet</SelectItem>
+              <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
+              <SelectItem value="claude-3-haiku">Claude 3 Haiku</SelectItem>
+              <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
+              <SelectItem value="gpt-4">GPT-4</SelectItem>
+              <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
+              <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro</SelectItem>
+              <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash</SelectItem>
+              <SelectItem value="llama-3.1-405b">Llama 3.1 405B</SelectItem>
+              <SelectItem value="llama-3.1-70b">Llama 3.1 70B</SelectItem>
+              <SelectItem value="llama-3.1-8b">Llama 3.1 8B</SelectItem>
+              <SelectItem value="mistral-large">Mistral Large</SelectItem>
+              <SelectItem value="mistral-medium">Mistral Medium</SelectItem>
+              <SelectItem value="mistral-small">Mistral Small</SelectItem>
+              <SelectItem value="mixtral-8x7b">Mixtral 8x7B</SelectItem>
+              <SelectItem value="mixtral-8x22b">Mixtral 8x22B</SelectItem>
+              <SelectItem value="command-r-plus">Command R+</SelectItem>
+              <SelectItem value="command-r">Command R</SelectItem>
+              <SelectItem value="grok-2">Grok 2</SelectItem>
+              <SelectItem value="grok-1.5">Grok 1.5</SelectItem>
+              <SelectItem value="deepseek-v2">DeepSeek V2</SelectItem>
+              <SelectItem value="deepseek-coder">DeepSeek Coder</SelectItem>
+              <SelectItem value="qwen-2.5-72b">Qwen 2.5 72B</SelectItem>
+              <SelectItem value="qwen-2.5-32b">Qwen 2.5 32B</SelectItem>
+              <SelectItem value="yi-34b">Yi 34B</SelectItem>
+              <SelectItem value="phi-3-medium">Phi-3 Medium</SelectItem>
+              <SelectItem value="phi-3-small">Phi-3 Small</SelectItem>
+              <SelectItem value="nemotron-70b">Nemotron 70B</SelectItem>
+              <SelectItem value="falcon-180b">Falcon 180B</SelectItem>
+              <SelectItem value="vicuna-33b">Vicuna 33B</SelectItem>
+              <SelectItem value="wizardlm-70b">WizardLM 70B</SelectItem>
+              <SelectItem value="orca-2">Orca 2</SelectItem>
+              <SelectItem value="starling-7b">Starling 7B</SelectItem>
+              <SelectItem value="zephyr-7b">Zephyr 7B</SelectItem>
+              <SelectItem value="openhermes-2.5">OpenHermes 2.5</SelectItem>
+              <SelectItem value="nous-hermes-2">Nous Hermes 2</SelectItem>
+              <SelectItem value="solar-10.7b">Solar 10.7B</SelectItem>
+              <SelectItem value="dolphin-2.5">Dolphin 2.5</SelectItem>
+              <SelectItem value="codellama-70b">CodeLlama 70B</SelectItem>
+              <SelectItem value="phind-codellama">Phind CodeLlama</SelectItem>
             </SelectContent>
           </Select>
         </div>

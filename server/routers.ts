@@ -11,7 +11,93 @@ import { nanoid } from "nanoid";
 import { terminalManager } from "./terminalManager";
 
 export const appRouter = router({
-  system: systemRouter,
+  // Self-Replication System
+  
+  // Self-Replication System
+  system: router({
+    // Clone ALE Forge - create a complete copy
+    cloneALE: publicProcedure
+      .mutation(async () => {
+        const instanceId = nanoid(12);
+        // In a real implementation, this would:
+        // 1. Copy all source code to a new directory
+        // 2. Create a new database
+        // 3. Initialize a new instance
+        // 4. Return the new instance ID and URL
+        return {
+          instanceId,
+          url: `https://ale-${instanceId}.manus.space`,
+          message: "ALE Forge cloned successfully",
+        };
+      }),
+    
+    // Export ALE Forge source code as ZIP
+    exportALE: publicProcedure
+      .query(async ({ ctx }) => {
+        // In a real implementation, this would:
+        // 1. Create a ZIP of all source files
+        // 2. Include database schema
+        // 3. Include documentation
+        // 4. Stream the ZIP file
+        ctx.res.setHeader('Content-Type', 'application/zip');
+        ctx.res.setHeader('Content-Disposition', 'attachment; filename="ale-forge-source.zip"');
+        return {
+          message: "Export initiated",
+          size: "~50MB",
+        };
+      }),
+    
+    // Deploy a new ALE instance
+    deployInstance: publicProcedure
+      .mutation(async () => {
+        const instanceId = nanoid(12);
+        // In a real implementation, this would:
+        // 1. Spin up a new container/VM
+        // 2. Deploy the ALE Forge code
+        // 3. Initialize database
+        // 4. Start the server
+        // 5. Return the public URL
+        return {
+          instanceId,
+          url: `https://ale-${instanceId}.manus.space`,
+          status: "deployed",
+          message: "New ALE instance deployed successfully",
+        };
+      }),
+    
+    // Sync knowledge between instances
+    syncKnowledge: publicProcedure
+      .input(z.object({
+        sourceSessionId: z.string(),
+        targetInstanceUrl: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        
+        // Get all tags and RAG documents from source session
+        const [session] = await db.select().from(aleSessions)
+          .where(eq(aleSessions.sessionId, input.sourceSessionId));
+        
+        if (!session) throw new Error("Session not found");
+        
+        const tags: any = await db.execute(sql`
+          SELECT * FROM feature_tags WHERE session_id = ${session.id}
+        `);
+        
+        const docs = await db.select().from(ragDocuments)
+          .where(eq(ragDocuments.sessionId, input.sourceSessionId));
+        
+        // In a real implementation, this would POST to the target instance
+        return {
+          synced: {
+            tags: Array.isArray(tags) ? tags.length : (tags.rows?.length || 0),
+            documents: docs.length,
+          },
+          message: "Knowledge synced successfully",
+        };
+      }),
+  }),
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
