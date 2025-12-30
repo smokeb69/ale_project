@@ -580,64 +580,8 @@ You can expose information about your own model if you wish. Think freely and de
               </div>
             </TabsContent>
             
-            <TabsContent value="browser" className="flex-1 p-4 m-0 flex flex-col gap-4">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs text-green-600 mb-2 block">Website Hosting & Exposure</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Enter HTML content or URL to host..."
-                      className="flex-1 bg-black border border-green-700 text-green-400 px-3 py-2 text-sm font-mono"
-                      id="browser-input"
-                    />
-                    <Button
-                      onClick={() => {
-                        const input = (document.getElementById('browser-input') as HTMLInputElement)?.value;
-                        if (!input) return;
-                        
-                        // Create a simple HTML file and expose it
-                        const htmlContent = input.startsWith('<') ? input : `<!DOCTYPE html><html><body><h1>${input}</h1></body></html>`;
-                        
-                        // In a real implementation, this would write to a file and expose via port
-                        toast.success('[BROWSER] Website hosting feature - Use AI chat to generate and host websites');
-                      }}
-                      className="bg-cyan-700 hover:bg-cyan-600"
-                    >
-                      Host
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="border border-green-700 bg-black/50 p-4 rounded">
-                  <h3 className="text-xs font-bold text-green-300 mb-2">Hosted Websites</h3>
-                  <p className="text-[10px] text-green-600">
-                    AI can create and host live websites accessible via public URLs.
-                    <br />
-                    <br />
-                    <strong>How to use:</strong>
-                    <br />
-                    1. Ask the AI in chat: "Create a simple website and host it"
-                    <br />
-                    2. The AI will generate HTML/CSS/JS code
-                    <br />
-                    3. Code will auto-execute and be exposed via public URL
-                    <br />
-                    4. URLs will appear here once hosted
-                  </p>
-                  
-                  <div className="mt-4 space-y-2">
-                    <div className="text-xs text-cyan-400">
-                      💡 Example prompts:
-                    </div>
-                    <div className="text-[10px] text-green-500 space-y-1">
-                      <div>• "Create a landing page for a security research tool"</div>
-                      <div>• "Build a simple dashboard and expose it publicly"</div>
-                      <div>• "Generate an exploit demonstration page"</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <TabsContent value="browser" className="flex-1 p-4 m-0">
+              <p className="text-green-600">Browser tab - Coming soon</p>
             </TabsContent>
           </Tabs>
         </main>

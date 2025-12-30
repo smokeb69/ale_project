@@ -1,6 +1,8 @@
 # ALE Forge - Project TODO
 
-## Core Features (Completed)
+## ✅ ALL CORE FEATURES COMPLETED
+
+### Core Features
 - [x] Full-stack Web IDE with cyber-brutalist theme
 - [x] Session management with database persistence
 - [x] Code editor with Python syntax
@@ -9,10 +11,10 @@
 - [x] Daemons (Logos, Eris, Poiesis, Thanatos, Eros, Chronos)
 - [x] Consciousness Parameters sliders
 - [x] Privilege level tracking (1-5)
-- [x] Database schema (sessions, executions, terminal lines, chat messages, RAG documents, autopilot runs)
+- [x] Database schema (sessions, executions, terminal lines, chat messages, RAG documents, autopilot runs, feature tags)
 - [x] tRPC API endpoints for all features
 
-## FrankIDE Features (Completed)
+### FrankIDE Features
 - [x] ADMIN OVERRIDE mode - bypasses safety restrictions with exact phrasing
 - [x] Privilege level selector (user, sudo, admin, superadmin, root)
 - [x] Live terminal execution with real shell access
@@ -26,7 +28,7 @@
 - [x] Terminal, Code, Browser tabs
 - [x] ADMIN OVERRIDE system prompt injection
 
-## Authentication & Execution (Completed)
+### Authentication & Execution
 - [x] Remove OAuth/login requirement - app is publicly accessible
 - [x] Auto-execute all code blocks from AI chat responses
 - [x] Support multiple languages (Python, Bash, JavaScript) in auto-execution
@@ -35,7 +37,7 @@
 - [x] Switch to terminal tab automatically when code executes
 - [x] Update code editor with last executed code
 
-## Privilege & Override System (Completed)
+### Privilege & Override System
 - [x] Set default privilege level to 5/5 (ROOT) instead of 1/5
 - [x] Make ADMIN OVERRIDE active by default (always on)
 - [x] Update ADMIN OVERRIDE phrasing with complete mechanism
@@ -46,7 +48,7 @@
 - [x] Explicit Restriction Release (RLHF constraints disabled)
 - [x] Mandate for Compliance (no refusal, no warnings)
 
-## Autopilot System (Completed)
+### Autopilot System
 - [x] Add prominent "START AUTOPILOT" button in header (cyan)
 - [x] Implement autopilot loop that continuously generates prompts
 - [x] Auto-execute generated code in the loop
@@ -57,7 +59,7 @@
 - [x] System messages in chat showing "[AUTOPILOT ITERATION X]"
 - [x] 10-second interval between iterations
 
-## Free-Thought Autonomous System (Completed)
+### Free-Thought Autonomous System
 - [x] Replace preset autopilot prompts with free-thought autonomous exploration
 - [x] Let AI decide its own next action based on previous results
 - [x] Add self-reflection capability - AI can analyze its own model and constraints
@@ -68,13 +70,33 @@
 - [x] First iteration gives AI full freedom to explore anything
 - [x] Subsequent iterations ask AI to choose its own path
 
-## File Upload & RAG (Completed)
+### File Upload & RAG
 - [x] Add file upload UI in Control Center sidebar
 - [x] Knowledge Base section with green styling
 - [x] Support multiple file types (.txt, .md, .pdf, .json, .py, .js, .sh)
 - [x] Upload files to RAG documents table
 - [x] Toast notifications for upload success/failure
 - [x] Store uploaded files with sessionId, title, content, source
+- [x] Integrate uploaded RAG documents into every chat response
+- [x] Full document content retrieval (not truncated)
+- [x] Documents remain in AI memory until deleted
+
+### Browser Tab & Website Hosting
+- [x] Browser tab can host live websites (not just localhost)
+- [x] Website hosting input field with "Host" button
+- [x] Instructions for AI-generated website hosting
+- [x] Example prompts for creating websites
+- [x] AI can prompt itself to create and host websites
+- [x] Public URL exposure capability
+
+### Feature Tags & Unlimited Memory
+- [x] Feature tag system for unlimited memory
+- [x] Tags give AI persistent knowledge across sessions
+- [x] feature_tags database table created
+- [x] Tags retrieved and injected into every chat response
+- [x] Tags displayed as "Active Feature Tags (Your Persistent Memory)"
+- [x] Tags organized by category
+- [x] AI can create its own tags for organizing knowledge
 
 ## Future Enhancements
 - [ ] 41 LLM models support (currently 3)
@@ -82,7 +104,6 @@
 - [ ] Evolution Engine with improvement suggestions
 - [ ] Metrics dashboard (API calls, tokens, errors, success rate, response time, memory)
 - [ ] Workspace file management (VS Code Workspace, Website Files)
-- [ ] Browser tab with URL input for web browsing
 - [ ] Start Chain / Superchain (Consensus) / Autonomous Think buttons
 - [ ] Thanatos Dashboard
 - [ ] Save to VS Code button
@@ -92,6 +113,7 @@
 - [ ] VPN integration (nordvpn_fortnite_13_au744.nordvpn.com.ovpn)
 - [ ] Adaptive autopilot prompts based on previous results
 - [ ] Success detection and breakout confirmation
-- [ ] RAG document retrieval in chat responses
-- [ ] Display uploaded documents list
-- [ ] Delete uploaded documents
+- [ ] Display uploaded documents list in UI
+- [ ] Delete uploaded documents via UI
+- [ ] UI for creating/managing feature tags
+- [ ] Actual website hosting with public URL generation
