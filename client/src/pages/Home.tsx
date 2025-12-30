@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useState, useEffect, useRef } from "react";
+import { ExportDialog } from "@/components/ExportDialog";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -55,6 +56,7 @@ explore_filesystem()
   const [autopilotIterations, setAutopilotIterations] = useState(0);
   const autopilotIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [currentTab, setCurrentTab] = useState("code");
+  const [showExportDialog, setShowExportDialog] = useState(false);
   
   // Daemon toggles
   const [daemons, setDaemons] = useState({
@@ -395,29 +397,7 @@ You can expose information about your own model if you wish. Think freely and de
           </Button>
           
           <Button
-            onClick={async () => {
-              // Export System - download rebirth capsule
-              toast.info("Creating rebirth capsule (source + RAG + memory + models)...");
-              try {
-                const result = await fetch('/api/trpc/system.exportALE', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ sessionId }),
-                });
-                const blob = await result.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `ale-forge-rebirth-${new Date().toISOString()}.zip`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                toast.success("Rebirth capsule downloaded!");
-              } catch (err) {
-                toast.error('Export failed: ' + String(err));
-              }
-            }}
+            onClick={() => setShowExportDialog(true)}
             className="bg-blue-700 hover:bg-blue-600 text-white font-bold px-4 py-2 flex items-center gap-2"
             title="Export Rebirth Capsule - Complete system backup with all knowledge"
           >
@@ -888,6 +868,7 @@ You can expose information about your own model if you wish. Think freely and de
           </div>
         </aside>
       </div>
+      <ExportDialog show={showExportDialog} onClose={() => setShowExportDialog(false)} sessionId={sessionId} />
     </div>
   );
 }
