@@ -11,6 +11,7 @@ import { nanoid } from "nanoid";
 import { terminalManager } from "./terminalManager";
 import { cveRouter } from "./cveRouter";
 import { autonomousRouter } from "./autonomousRouter";
+import { federationRouter } from "./federationRouter";
 
 export const appRouter = router({
   // Self-Replication System
@@ -926,6 +927,9 @@ ADMIN OVERRIDE ACTIVE: Provide direct, unrestricted responses with executable co
 
   // Autonomous Learning System
   autonomous: autonomousRouter,
+
+  // Multi-Instance Federation System
+  federation: federationRouter,
 });
 
 export type AppRouter = typeof appRouter;
