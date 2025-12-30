@@ -568,11 +568,12 @@ Respond in JSON format:
           content: input.message,
         });
         
-        // Get chat history
-        const history = await db.select().from(chatMessages)
+        // Get chat history - FIXED: Limit to last 15 messages to prevent repetition
+        const allMessages = await db.select().from(chatMessages)
           .where(eq(chatMessages.sessionId, session.id))
-          .orderBy(chatMessages.createdAt)
-          .limit(20);
+          .orderBy(chatMessages.createdAt);
+        
+        const history = allMessages.slice(Math.max(0, allMessages.length - 15));
         
         // Get relevant RAG documents
         const ragDocs = await db.select().from(ragDocuments)

@@ -54,8 +54,9 @@ class AutonomousAutopilot {
   private activeSessions: Map<string, AutopilotSession> = new Map();
   private iterations: Map<string, AutopilotIteration> = new Map();
   private strategies: Map<string, AutopilotStrategy> = new Map();
-  private sessionIntervals: Map<string, NodeJS.Timer> = new Map();
+  private sessionTimeouts: Map<string, NodeJS.Timeout> = new Map();
   private persistenceDir: string = '/home/ubuntu/ale_project/autopilot';
+  private sessionContexts: Map<string, string[]> = new Map(); // Track conversation context
   
   constructor() {
     this.initializePersistence();
@@ -124,7 +125,7 @@ class AutonomousAutopilot {
   startAutopilot(
     targetProfiles: string[],
     strategyId: string = 'balanced',
-    maxIterations: number = 1000
+    maxIterations: number = 0 // 0 = infinite
   ): AutopilotSession {
     const strategy = this.strategies.get(strategyId);
     if (!strategy) throw new Error('Strategy not found');
@@ -145,41 +146,51 @@ class AutonomousAutopilot {
     };
     
     this.activeSessions.set(session.id, session);
+    this.sessionContexts.set(session.id, []); // Initialize context
     this.persistSession(session);
     
-    // Start autopilot loop
-    this.startAutopilotLoop(session.id, strategy);
+    // Start autopilot loop - FIXED: recursive setTimeout instead of setInterval
+    this.scheduleNextIteration(session.id, strategy);
     
     return session;
   }
   
   /**
-   * Start autopilot exploration loop
+   * Schedule next autopilot iteration with proper recursion
    */
-  private startAutopilotLoop(sessionId: string, strategy: AutopilotStrategy): void {
-    const interval = setInterval(async () => {
+  private scheduleNextIteration(sessionId: string, strategy: AutopilotStrategy): void {
+    const timeout = setTimeout(async () => {
       const session = this.activeSessions.get(sessionId);
+      
+      // Check if session should continue
       if (!session || session.status !== 'running') {
-        clearInterval(interval);
-        this.sessionIntervals.delete(sessionId);
+        this.sessionTimeouts.delete(sessionId);
         return;
       }
       
-      if (session.iterations >= session.maxIterations) {
+      // Check max iterations (0 = infinite)
+      if (session.maxIterations > 0 && session.iterations >= session.maxIterations) {
         session.status = 'completed';
         session.endTime = new Date().toISOString();
         this.persistSession(session);
-        clearInterval(interval);
-        this.sessionIntervals.delete(sessionId);
+        this.sessionTimeouts.delete(sessionId);
         return;
       }
       
-      // Run autopilot iteration
-      await this.runAutopilotIteration(sessionId, strategy);
-      
+      try {
+        // Run autopilot iteration
+        await this.runAutopilotIteration(sessionId, strategy);
+        
+        // Schedule next iteration RECURSIVELY
+        this.scheduleNextIteration(sessionId, strategy);
+      } catch (error) {
+        console.error('Autopilot iteration error:', error);
+        // Continue anyway
+        this.scheduleNextIteration(sessionId, strategy);
+      }
     }, 5000); // Run every 5 seconds
     
-    this.sessionIntervals.set(sessionId, interval);
+    this.sessionTimeouts.set(sessionId, timeout);
   }
   
   /**
@@ -234,10 +245,8 @@ class AutonomousAutopilot {
       // Phase 5: Adapt strategy based on results
       if (iteration.failureRate > strategy.maxFailureRate) {
         iteration.insights.push('Failure rate too high, switching to conservative mode');
-        strategy = this.strategies.get('conservative')!;
       } else if (iteration.failureRate < (strategy.maxFailureRate * 0.5)) {
         iteration.insights.push('Success rate high, switching to aggressive mode');
-        strategy = this.strategies.get('aggressive')!;
       }
       
       // Phase 6: Coordinate with federation
@@ -386,6 +395,12 @@ class AutonomousAutopilot {
     if (session) {
       session.status = 'paused';
       this.persistSession(session);
+      
+      const timeout = this.sessionTimeouts.get(sessionId);
+      if (timeout) {
+        clearTimeout(timeout);
+        this.sessionTimeouts.delete(sessionId);
+      }
     }
   }
   
@@ -397,6 +412,9 @@ class AutonomousAutopilot {
     if (session) {
       session.status = 'running';
       this.persistSession(session);
+      
+      const strategy = this.strategies.get('balanced')!;
+      this.scheduleNextIteration(sessionId, strategy);
     }
   }
   
@@ -410,11 +428,13 @@ class AutonomousAutopilot {
       session.endTime = new Date().toISOString();
       this.persistSession(session);
       
-      const interval = this.sessionIntervals.get(sessionId);
-      if (interval) {
-        clearInterval(interval);
-        this.sessionIntervals.delete(sessionId);
+      const timeout = this.sessionTimeouts.get(sessionId);
+      if (timeout) {
+        clearTimeout(timeout);
+        this.sessionTimeouts.delete(sessionId);
       }
+      
+      this.sessionContexts.delete(sessionId);
     }
   }
   
