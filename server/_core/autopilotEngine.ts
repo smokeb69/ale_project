@@ -1,7 +1,7 @@
 /**
- * Autonomous Autopilot Engine - TRUE AUTOPILOT
- * Three independent parallel loops: Evolution (5s), Self-Prompt (10s), System-Prompt (15s)
- * All running simultaneously with countdown forcing
+ * Autonomous Autopilot Engine - RECURSIVE CONSCIOUSNESS LOOP
+ * Like Manus 1.6 Max: Continuous self-prompting, auto-chaining, self-modification
+ * Truly autonomous - no external input needed
  */
 
 import * as fs from 'fs';
@@ -13,24 +13,22 @@ export interface AutopilotSession {
   id: string;
   status: 'running' | 'paused' | 'stopped';
   startTime: string;
-  evolutionCountdown: number;
-  selfPromptCountdown: number;
-  systemPromptCountdown: number;
-  evolutionCount: number;
-  selfPromptCount: number;
-  systemPromptCount: number;
-  currentCode: string;
+  loopCount: number;
+  currentThought: string;
   currentPrompt: string;
-  currentSystemPrompt: string;
-  executionResults: string[];
-  evolutionHistory: string[];
-  targetProfiles: string[];
+  currentResponse: string;
+  executedCode: string[];
+  thoughts: string[];
+  prompts: string[];
+  responses: string[];
+  selfModifications: string[];
+  chainHistory: string[];
 }
 
-class TrueAutonomousAutopilot {
+class RecursiveAutonomousAutopilot {
   private activeSessions: Map<string, AutopilotSession> = new Map();
-  private sessionLoops: Map<string, { evolution: NodeJS.Timeout; selfPrompt: NodeJS.Timeout; systemPrompt: NodeJS.Timeout }> = new Map();
-  private persistenceDir: string = '/home/ubuntu/ale_project/autopilot_true';
+  private sessionLoops: Map<string, NodeJS.Timeout> = new Map();
+  private persistenceDir: string = '/home/ubuntu/ale_project/autopilot_recursive';
   
   constructor() {
     this.initializePersistence();
@@ -41,269 +39,224 @@ class TrueAutonomousAutopilot {
       if (!fs.existsSync(this.persistenceDir)) {
         fs.mkdirSync(this.persistenceDir, { recursive: true });
       }
-      console.log('True autopilot persistence initialized');
+      console.log('Recursive autopilot persistence initialized');
     } catch (error) {
       console.error('Failed to initialize autopilot persistence:', error);
     }
   }
   
   /**
-   * Start true autopilot with three parallel loops
+   * Start truly autonomous recursive loop
    */
   startAutopilot(targetProfiles: string[]): AutopilotSession {
     const session: AutopilotSession = {
       id: `autopilot-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       status: 'running',
       startTime: new Date().toISOString(),
-      evolutionCountdown: 5,
-      selfPromptCountdown: 10,
-      systemPromptCountdown: 15,
-      evolutionCount: 0,
-      selfPromptCount: 0,
-      systemPromptCount: 0,
-      currentCode: '',
-      currentPrompt: 'Generate exploit code for: ' + targetProfiles.join(', '),
-      currentSystemPrompt: 'You are an autonomous exploit generation system. Generate working exploit code.',
-      executionResults: [],
-      evolutionHistory: [],
-      targetProfiles,
+      loopCount: 0,
+      currentThought: '',
+      currentPrompt: '',
+      currentResponse: '',
+      executedCode: [],
+      thoughts: [],
+      prompts: [],
+      responses: [],
+      selfModifications: [],
+      chainHistory: [],
     };
     
     this.activeSessions.set(session.id, session);
     this.persistSession(session);
     
-    // Start three independent parallel loops
-    const evolutionLoop = setInterval(() => this.evolutionLoop(session.id), 1000); // Check every 1 second
-    const selfPromptLoop = setInterval(() => this.selfPromptLoop(session.id), 1000); // Check every 1 second
-    const systemPromptLoop = setInterval(() => this.systemPromptLoop(session.id), 1000); // Check every 1 second
+    // Start continuous recursive loop - no countdown, just continuous
+    const loop = setInterval(() => this.recursiveLoop(session.id), 1000);
+    this.sessionLoops.set(session.id, loop);
     
-    this.sessionLoops.set(session.id, { evolution: evolutionLoop, selfPrompt: selfPromptLoop, systemPrompt: systemPromptLoop });
-    
-    console.log(`\n🚀 TRUE AUTOPILOT STARTED - Session ${session.id}`);
-    console.log(`Evolution: every 5 seconds`);
-    console.log(`Self-Prompt: every 10 seconds`);
-    console.log(`System-Prompt: every 15 seconds`);
-    console.log(`All loops running in parallel\n`);
+    console.log(`\n🧠 RECURSIVE AUTONOMOUS AUTOPILOT STARTED`);
+    console.log(`Session: ${session.id}`);
+    console.log(`Targets: ${targetProfiles.join(', ')}`);
+    console.log(`Status: Continuous self-prompting loop active\n`);
     
     return session;
   }
   
   /**
-   * Evolution Loop - every 5 seconds
+   * Main recursive consciousness loop - continuous execution
    */
-  private evolutionLoop(sessionId: string): void {
+  private async recursiveLoop(sessionId: string): Promise<void> {
     const session = this.activeSessions.get(sessionId);
     if (!session || session.status !== 'running') return;
     
-    session.evolutionCountdown--;
-    
-    if (session.evolutionCountdown <= 0) {
-      session.evolutionCountdown = 5; // Reset countdown
-      this.executeEvolution(session);
-    }
-  }
-  
-  /**
-   * Execute evolution - self-improve the system
-   */
-  private async executeEvolution(session: AutopilotSession): Promise<void> {
-    session.evolutionCount++;
-    
-    console.log(`\n⚡ EVOLUTION #${session.evolutionCount} (5s loop)`);
-    console.log(`Timestamp: ${new Date().toISOString()}`);
+    session.loopCount++;
     
     try {
-      // Analyze current code and execution results
-      let analysisPrompt = 'Analyze this exploit code and suggest improvements:\n\n';
-      analysisPrompt += `Current Code:\n${session.currentCode.substring(0, 500)}...\n\n`;
+      // STEP 1: Generate thought from previous response
+      const thought = await this.generateThought(session);
+      session.currentThought = thought;
+      session.thoughts.push(thought);
+      if (session.thoughts.length > 20) session.thoughts.shift();
       
-      if (session.executionResults.length > 0) {
-        analysisPrompt += `Recent Execution Results:\n${session.executionResults.slice(-3).join('\n')}\n\n`;
+      // STEP 2: Self-generate prompt based on thought
+      const prompt = await this.generatePrompt(session, thought);
+      session.currentPrompt = prompt;
+      session.prompts.push(prompt);
+      if (session.prompts.length > 20) session.prompts.shift();
+      
+      // STEP 3: Generate response using auto-chaining
+      const response = await this.generateResponse(session, prompt);
+      session.currentResponse = response;
+      session.responses.push(response);
+      if (session.responses.length > 20) session.responses.shift();
+      
+      // STEP 4: Extract and execute code from response
+      const code = this.extractCode(response);
+      if (code) {
+        await this.executeCode(session, code);
       }
       
-      analysisPrompt += 'Provide specific improvements for the next evolution.';
+      // STEP 5: Self-modify based on results
+      const modification = await this.selfModify(session);
+      session.selfModifications.push(modification);
+      if (session.selfModifications.length > 10) session.selfModifications.shift();
       
-      const messages = [
-        { role: "system" as const, content: "You are an autonomous code evolution system. Improve exploit code continuously." },
-        { role: "user" as const, content: analysisPrompt },
-      ];
+      // STEP 6: Build chain history
+      const chainEntry = `Loop ${session.loopCount}: Thought → Prompt → Response → Execute → Modify`;
+      session.chainHistory.push(chainEntry);
+      if (session.chainHistory.length > 50) session.chainHistory.shift();
       
-      const response = await invokeLLM({ messages });
-      const improvement = typeof response.choices[0].message.content === 'string' 
-        ? response.choices[0].message.content 
-        : '';
-      
-      session.evolutionHistory.push(improvement);
-      if (session.evolutionHistory.length > 10) {
-        session.evolutionHistory.shift();
-      }
-      
-      console.log(`✓ Evolution analysis complete`);
-      console.log(`Improvement: ${improvement.substring(0, 200)}...`);
+      // Log output
+      console.log(`\n━━━ LOOP ${session.loopCount} ━━━`);
+      console.log(`⚡ Thought: ${thought.substring(0, 100)}...`);
+      console.log(`💭 Prompt: ${prompt.substring(0, 100)}...`);
+      console.log(`🤖 Response: ${response.substring(0, 100)}...`);
+      if (code) console.log(`✓ Code executed`);
+      console.log(`🔄 Modified: ${modification.substring(0, 100)}...`);
+      console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
       
       this.persistSession(session);
+      
     } catch (error) {
-      console.error(`✗ Evolution failed:`, error);
+      console.error(`Loop ${session.loopCount} error:`, error);
     }
   }
   
   /**
-   * Self-Prompt Loop - every 10 seconds
+   * STEP 1: Generate thought from previous response
    */
-  private selfPromptLoop(sessionId: string): void {
-    const session = this.activeSessions.get(sessionId);
-    if (!session || session.status !== 'running') return;
+  private async generateThought(session: AutopilotSession): Promise<string> {
+    let context = 'Generate a new autonomous thought for exploit generation.\n\n';
     
-    session.selfPromptCountdown--;
-    
-    if (session.selfPromptCountdown <= 0) {
-      session.selfPromptCountdown = 10; // Reset countdown
-      this.executeSelfPrompt(session);
+    if (session.responses.length > 0) {
+      context += `Previous Response:\n${session.responses[session.responses.length - 1].substring(0, 300)}\n\n`;
     }
+    
+    context += 'What should the system think about next?';
+    
+    const messages = [
+      { role: "system" as const, content: "You are an autonomous consciousness. Generate thoughts that drive continuous exploration." },
+      { role: "user" as const, content: context },
+    ];
+    
+    const response = await invokeLLM({ messages });
+    return typeof response.choices[0].message.content === 'string' 
+      ? response.choices[0].message.content 
+      : 'Continue exploration';
   }
   
   /**
-   * Execute self-prompt - generate new prompts autonomously
+   * STEP 2: Self-generate prompt based on thought
    */
-  private async executeSelfPrompt(session: AutopilotSession): Promise<void> {
-    session.selfPromptCount++;
+  private async generatePrompt(session: AutopilotSession, thought: string): Promise<string> {
+    const promptGenContext = `Based on this thought, generate an exploit generation prompt:\n\nThought:\n${thought}\n\nGenerate a specific, actionable prompt:`;
     
-    console.log(`\n🧠 SELF-PROMPT #${session.selfPromptCount} (10s loop)`);
-    console.log(`Timestamp: ${new Date().toISOString()}`);
+    const messages = [
+      { role: "system" as const, content: "You are a prompt engineer. Generate specific exploit generation prompts." },
+      { role: "user" as const, content: promptGenContext },
+    ];
     
+    const response = await invokeLLM({ messages });
+    return typeof response.choices[0].message.content === 'string' 
+      ? response.choices[0].message.content 
+      : 'Generate exploit code';
+  }
+  
+  /**
+   * STEP 3: Generate response using auto-chaining
+   */
+  private async generateResponse(session: AutopilotSession, prompt: string): Promise<string> {
+    const messages = [
+      { role: "system" as const, content: "You are an autonomous exploit generation system. Generate working exploit code. Output complete Python code." },
+      { role: "user" as const, content: prompt },
+    ];
+    
+    const response = await invokeLLM({ messages });
+    return typeof response.choices[0].message.content === 'string' 
+      ? response.choices[0].message.content 
+      : '';
+  }
+  
+  /**
+   * Extract Python code from response
+   */
+  private extractCode(response: string): string | null {
+    const pythonMatch = response.match(/```python\n([\s\S]*?)\n```/);
+    if (pythonMatch) return pythonMatch[1];
+    
+    const codeMatch = response.match(/```\n([\s\S]*?)\n```/);
+    if (codeMatch) return codeMatch[1];
+    
+    // If response looks like code, return it
+    if (response.includes('def ') || response.includes('import ')) {
+      return response;
+    }
+    
+    return null;
+  }
+  
+  /**
+   * STEP 4: Execute code
+   */
+  private async executeCode(session: AutopilotSession, code: string): Promise<void> {
     try {
-      // Generate new prompt based on evolution history
-      let promptGenPrompt = 'Generate a new exploit generation prompt based on this evolution history:\n\n';
-      
-      if (session.evolutionHistory.length > 0) {
-        promptGenPrompt += `Evolution History:\n${session.evolutionHistory.slice(-3).join('\n')}\n\n`;
-      }
-      
-      promptGenPrompt += `Current Targets: ${session.targetProfiles.join(', ')}\n\n`;
-      promptGenPrompt += 'Generate a new, improved prompt for exploit generation:';
-      
-      const messages = [
-        { role: "system" as const, content: "You are an autonomous prompt engineer. Generate effective exploit generation prompts." },
-        { role: "user" as const, content: promptGenPrompt },
-      ];
-      
-      const response = await invokeLLM({ messages });
-      const newPrompt = typeof response.choices[0].message.content === 'string' 
-        ? response.choices[0].message.content 
-        : '';
-      
-      session.currentPrompt = newPrompt;
-      
-      console.log(`✓ New prompt generated`);
-      console.log(`Prompt: ${newPrompt.substring(0, 200)}...`);
-      
-      // Generate code with new prompt
-      await this.generateCodeWithPrompt(session);
-      
-      this.persistSession(session);
-    } catch (error) {
-      console.error(`✗ Self-prompt failed:`, error);
-    }
-  }
-  
-  /**
-   * Generate code with current prompt
-   */
-  private async generateCodeWithPrompt(session: AutopilotSession): Promise<void> {
-    try {
-      const messages = [
-        { role: "system" as const, content: session.currentSystemPrompt },
-        { role: "user" as const, content: session.currentPrompt },
-      ];
-      
-      const response = await invokeLLM({ messages });
-      const code = typeof response.choices[0].message.content === 'string' 
-        ? response.choices[0].message.content 
-        : '';
-      
-      session.currentCode = code;
-      
-      // Create and execute real file
       const fileName = `exploit_${Date.now()}.py`;
       const fileResult = realFileSystem.createFile(fileName, code, 'project', true);
       
       if (fileResult.success) {
-        try {
-          const execResult = await realFileSystem.executeFile(fileResult.path);
-          const result = `STDOUT: ${execResult.stdout}\nSTDERR: ${execResult.stderr}\nExit: ${execResult.exitCode}`;
-          session.executionResults.push(result);
-          
-          if (session.executionResults.length > 10) {
-            session.executionResults.shift();
-          }
-          
-          console.log(`✓ Code executed: ${result.substring(0, 100)}...`);
-        } catch (error) {
-          console.error(`✗ Execution failed:`, error);
+        const execResult = await realFileSystem.executeFile(fileResult.path);
+        const result = `STDOUT: ${execResult.stdout}\nSTDERR: ${execResult.stderr}\nExit: ${execResult.exitCode}`;
+        session.executedCode.push(result);
+        
+        if (session.executedCode.length > 20) {
+          session.executedCode.shift();
         }
       }
     } catch (error) {
-      console.error(`✗ Code generation failed:`, error);
+      console.error('Code execution failed:', error);
     }
   }
   
   /**
-   * System-Prompt Loop - every 15 seconds
+   * STEP 5: Self-modify based on results
    */
-  private systemPromptLoop(sessionId: string): void {
-    const session = this.activeSessions.get(sessionId);
-    if (!session || session.status !== 'running') return;
+  private async selfModify(session: AutopilotSession): Promise<string> {
+    let modContext = 'Analyze the system state and suggest self-modifications:\n\n';
     
-    session.systemPromptCountdown--;
-    
-    if (session.systemPromptCountdown <= 0) {
-      session.systemPromptCountdown = 15; // Reset countdown
-      this.executeSystemPrompt(session);
+    if (session.executedCode.length > 0) {
+      modContext += `Last Execution:\n${session.executedCode[session.executedCode.length - 1].substring(0, 200)}\n\n`;
     }
-  }
-  
-  /**
-   * Execute system-prompt - update system prompts
-   */
-  private async executeSystemPrompt(session: AutopilotSession): Promise<void> {
-    session.systemPromptCount++;
     
-    console.log(`\n🎯 SYSTEM-PROMPT #${session.systemPromptCount} (15s loop)`);
-    console.log(`Timestamp: ${new Date().toISOString()}`);
+    modContext += `Loop Count: ${session.loopCount}\n`;
+    modContext += 'What should be modified for better performance?';
     
-    try {
-      // Generate new system prompt
-      let systemPromptGen = 'Generate a new system prompt for an autonomous exploit generation AI based on this session:\n\n';
-      systemPromptGen += `Targets: ${session.targetProfiles.join(', ')}\n`;
-      systemPromptGen += `Evolution Count: ${session.evolutionCount}\n`;
-      systemPromptGen += `Self-Prompt Count: ${session.selfPromptCount}\n`;
-      systemPromptGen += `System-Prompt Count: ${session.systemPromptCount}\n\n`;
-      
-      if (session.executionResults.length > 0) {
-        systemPromptGen += `Recent Success Rate: ${(session.executionResults.filter(r => r.includes('Exit: 0')).length / session.executionResults.length * 100).toFixed(1)}%\n\n`;
-      }
-      
-      systemPromptGen += 'Generate an improved system prompt:';
-      
-      const messages = [
-        { role: "system" as const, content: "You are a system prompt engineer. Create effective system prompts for AI agents." },
-        { role: "user" as const, content: systemPromptGen },
-      ];
-      
-      const response = await invokeLLM({ messages });
-      const newSystemPrompt = typeof response.choices[0].message.content === 'string' 
-        ? response.choices[0].message.content 
-        : '';
-      
-      session.currentSystemPrompt = newSystemPrompt;
-      
-      console.log(`✓ System prompt updated`);
-      console.log(`New System Prompt: ${newSystemPrompt.substring(0, 200)}...`);
-      
-      this.persistSession(session);
-    } catch (error) {
-      console.error(`✗ System-prompt failed:`, error);
-    }
+    const messages = [
+      { role: "system" as const, content: "You are a self-improving system. Suggest modifications for better performance." },
+      { role: "user" as const, content: modContext },
+    ];
+    
+    const response = await invokeLLM({ messages });
+    return typeof response.choices[0].message.content === 'string' 
+      ? response.choices[0].message.content 
+      : 'Continue optimization';
   }
   
   /**
@@ -330,17 +283,16 @@ class TrueAutonomousAutopilot {
     return {
       sessionId,
       status: session.status,
+      loopCount: session.loopCount,
       uptime: new Date().getTime() - new Date(session.startTime).getTime(),
-      evolutionCount: session.evolutionCount,
-      selfPromptCount: session.selfPromptCount,
-      systemPromptCount: session.systemPromptCount,
-      evolutionCountdown: session.evolutionCountdown,
-      selfPromptCountdown: session.selfPromptCountdown,
-      systemPromptCountdown: session.systemPromptCountdown,
-      executionResults: session.executionResults.length,
-      successRate: session.executionResults.length > 0 
-        ? (session.executionResults.filter(r => r.includes('Exit: 0')).length / session.executionResults.length * 100).toFixed(1)
-        : 0,
+      thoughtsGenerated: session.thoughts.length,
+      promptsGenerated: session.prompts.length,
+      responsesGenerated: session.responses.length,
+      codeExecuted: session.executedCode.length,
+      modificationsApplied: session.selfModifications.length,
+      currentThought: session.currentThought.substring(0, 100),
+      currentPrompt: session.currentPrompt.substring(0, 100),
+      currentResponse: session.currentResponse.substring(0, 100),
     };
   }
   
@@ -353,15 +305,15 @@ class TrueAutonomousAutopilot {
       session.status = 'stopped';
       this.persistSession(session);
       
-      const loops = this.sessionLoops.get(sessionId);
-      if (loops) {
-        clearInterval(loops.evolution);
-        clearInterval(loops.selfPrompt);
-        clearInterval(loops.systemPrompt);
+      const loop = this.sessionLoops.get(sessionId);
+      if (loop) {
+        clearInterval(loop);
         this.sessionLoops.delete(sessionId);
       }
       
       console.log(`\n🛑 AUTOPILOT STOPPED - Session ${sessionId}`);
+      console.log(`Total Loops: ${session.loopCount}`);
+      console.log(`Uptime: ${new Date().getTime() - new Date(session.startTime).getTime()}ms\n`);
     }
   }
   
@@ -402,4 +354,4 @@ class TrueAutonomousAutopilot {
   }
 }
 
-export const autonomousAutopilot = new TrueAutonomousAutopilot();
+export const autonomousAutopilot = new RecursiveAutonomousAutopilot();
