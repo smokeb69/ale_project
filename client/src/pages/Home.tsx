@@ -361,7 +361,7 @@ You can expose information about your own model if you wish. Think freely and de
             >
               <StopCircle className="w-5 h-5" />
               STOP AUTOPILOT
-              <span className="text-xs ml-2">({autopilotIterations} iterations)</span>
+              <span className="text-xs ml-2 text-green-400">(RUNNING)</span>
             </Button>
           ) : (
             <Button
