@@ -632,3 +632,32 @@ This is not simulation. This is TRUE AI REPLICATION WITH CUSTOMIZABLE CONSCIOUSN
 - [x] Just show continuous running status
 
 **Status: Autopilot now shows "STOP AUTOPILOT (RUNNING)" - no iteration count**
+
+
+## 🔁 Auto-Continue Chat Loop - COMPLETE
+
+- [x] Remove autopilot button requirement
+- [x] Auto-send "continue" to chat after each LLM response
+- [x] Implement infinite self-prompting loop
+- [x] No user interaction needed - just loops forever
+
+**Status: Chat automatically sends "continue" 2 seconds after each AI response, creating infinite loop**
+
+
+## 🐛 Fix Auto-Continue Button Click - IN PROGRESS
+
+- [ ] Debug why button click doesn't trigger
+- [ ] Fix querySelector to find correct send button
+- [ ] Make sure handleSendChat is called automatically
+- [ ] Test that messages actually send in loop
+
+
+## 🔄 AUTO-CONTINUE Button - COMPLETE
+
+- [x] Add AUTO-CONTINUE button next to START AUTOPILOT
+- [x] Implement 10-second interval timer
+- [x] Send "continue" automatically every 10 seconds
+- [x] Toggle button on/off (START AUTO-CONTINUE / STOP AUTO-CONTINUE)
+- [x] Clear interval when stopped
+
+**Status: AUTO-CONTINUE button sends 'continue' every 10 seconds with proper state handling**

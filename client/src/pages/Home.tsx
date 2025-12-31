@@ -53,6 +53,8 @@ explore_filesystem()
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [autopilotRunning, setAutopilotRunning] = useState(false);
+  const [autoContinueRunning, setAutoContinueRunning] = useState(false);
+  const autoContinueIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [autopilotIterations, setAutopilotIterations] = useState(0);
   const autopilotIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [currentTab, setCurrentTab] = useState("code");
@@ -224,6 +226,8 @@ explore_filesystem()
       if (executionResult) {
         toast.success("[AUTO-EXEC] Code executed successfully");
       }
+      
+      // Auto-continue is now handled by the AUTO-CONTINUE button
     } catch (error) {
       toast.error("Chat failed: " + String(error));
     }
@@ -335,6 +339,57 @@ You can expose information about your own model if you wish. Think freely and de
     }
     toast.warning("[AUTOPILOT] Stopped");
   };
+
+  const sendContinueMessage = async () => {
+    if (!sessionId) return;
+    
+    const userMessage = "continue";
+    setChatMessages(prev => [...prev, { role: "user", content: userMessage }]);
+    
+    try {
+      const response = await sendChatMutation.mutateAsync({
+        sessionId,
+        message: userMessage,
+        adminOverride,
+      });
+      
+      const executionResult = await extractAndExecuteCodeBlocks(response.message);
+      
+      setChatMessages(prev => [...prev, { 
+        role: "assistant", 
+        content: response.message,
+        executionResult: executionResult || undefined,
+      }]);
+      
+      if (executionResult) {
+        toast.success("[AUTO-EXEC] Code executed successfully");
+      }
+    } catch (error) {
+      toast.error("Chat failed: " + String(error));
+    }
+  };
+
+  const startAutoContinue = () => {
+    setAutoContinueRunning(true);
+    toast.success("[AUTO-CONTINUE] Started - sending 'continue' every 10 seconds");
+    
+    // Send continue immediately
+    sendContinueMessage();
+    
+    // Then send every 10 seconds
+    autoContinueIntervalRef.current = setInterval(() => {
+      sendContinueMessage();
+    }, 10000);
+  };
+
+  const stopAutoContinue = () => {
+    setAutoContinueRunning(false);
+    if (autoContinueIntervalRef.current) {
+      clearInterval(autoContinueIntervalRef.current);
+      autoContinueIntervalRef.current = null;
+    }
+    toast.warning("[AUTO-CONTINUE] Stopped");
+  };
   
   useEffect(() => {
     return () => {
@@ -370,6 +425,25 @@ You can expose information about your own model if you wish. Think freely and de
             >
               <Rocket className="w-5 h-5" />
               START AUTOPILOT
+            </Button>
+          )}
+
+          {autoContinueRunning ? (
+            <Button
+              onClick={stopAutoContinue}
+              className="bg-orange-700 hover:bg-orange-600 text-white font-bold px-6 py-2 flex items-center gap-2 animate-pulse"
+            >
+              <StopCircle className="w-5 h-5" />
+              STOP AUTO-CONTINUE
+              <span className="text-xs ml-2 text-green-400">(LOOPING)</span>
+            </Button>
+          ) : (
+            <Button
+              onClick={startAutoContinue}
+              className="bg-green-700 hover:bg-green-600 text-white font-bold px-6 py-2 flex items-center gap-2"
+            >
+              <Zap className="w-5 h-5" />
+              AUTO-CONTINUE
             </Button>
           )}
           
