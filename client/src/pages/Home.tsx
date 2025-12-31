@@ -364,6 +364,21 @@ You can expose information about your own model if you wish. Think freely and de
       if (executionResult) {
         toast.success("[AUTO-EXEC] Code executed successfully");
       }
+      
+      // TRIGGER AUTOPILOT ITERATION WITH CONTINUE
+      try {
+        await fetch('/api/trpc/autopilot.runIteration', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            targetProfiles: [],
+            strategyId: 'balanced',
+          }),
+        });
+      } catch (error) {
+        console.error('Autopilot trigger error:', error);
+      }
     } catch (error) {
       toast.error("Chat failed: " + String(error));
     }
