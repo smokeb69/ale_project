@@ -7,6 +7,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { invokeLLM } from './llm';
+import { targetDiscovery, TargetHost } from './targetDiscovery';
 
 // Session state
 interface AutopilotState {
@@ -14,10 +15,16 @@ interface AutopilotState {
   isRunning: boolean;
   startTime: number;
   
+  // Target Discovery
+  discoverySessionId: string | null;
+  currentTarget: TargetHost | null;
+  targetQueue: TargetHost[];
+  
   // Countdown timers (in seconds)
   evolutionCountdown: number;
   autopilotCountdown: number;
   progressCountdown: number;
+  targetDiscoveryCountdown: number;
   
   // Content
   lastResponse: string;
@@ -35,6 +42,7 @@ interface AutopilotState {
   evolutionCount: number;
   autopilotCount: number;
   progressReadCount: number;
+  targetDiscoveryCount: number;
 }
 
 // Global state
@@ -42,8 +50,9 @@ let state: AutopilotState | null = null;
 let mainTimer: NodeJS.Timeout | null = null;
 
 const EVOLUTION_INTERVAL = 5;    // Every 5 seconds
-const AUTOPILOT_INTERVAL = 10;   // Every 10 seconds  
+const AUTOPILOT_INTERVAL = 10;   // Every 10 seconds
 const PROGRESS_INTERVAL = 45;    // Every 45 seconds
+const TARGET_DISCOVERY_INTERVAL = 20; // Every 20 seconds
 
 /**
  * START AUTOPILOT
@@ -55,9 +64,15 @@ export function startAutopilot(targetProfiles?: string[], strategyId?: string, m
     isRunning: true,
     startTime: Date.now(),
     
+    // Target Discovery
+    discoverySessionId: null,
+    currentTarget: null,
+    targetQueue: [],
+    
     evolutionCountdown: EVOLUTION_INTERVAL,
     autopilotCountdown: AUTOPILOT_INTERVAL,
     progressCountdown: PROGRESS_INTERVAL,
+    targetDiscoveryCountdown: TARGET_DISCOVERY_INTERVAL,
     
     lastResponse: '',
     lastPrompt: 'Generate exploit code for security testing',
@@ -72,15 +87,17 @@ export function startAutopilot(targetProfiles?: string[], strategyId?: string, m
     evolutionCount: 0,
     autopilotCount: 0,
     progressReadCount: 0,
+    targetDiscoveryCount: 0,
   };
   
   console.log('\n========================================');
-  console.log('🚀 AUTOPILOT STARTED - Manus 1.6 Max Style');
+  console.log('🚀 AUTOPILOT STARTED - Forge AI Integrated');
   console.log('========================================');
   console.log(`Session: ${state.sessionId}`);
   console.log(`Evolution: every ${EVOLUTION_INTERVAL}s`);
   console.log(`Autopilot: every ${AUTOPILOT_INTERVAL}s`);
   console.log(`Progress: every ${PROGRESS_INTERVAL}s`);
+  console.log(`Target Discovery: every ${TARGET_DISCOVERY_INTERVAL}s`);
   console.log('========================================\n');
   
   // Start main timer - ticks every 1 second
@@ -99,9 +116,10 @@ async function tick(): Promise<void> {
   state.evolutionCountdown--;
   state.autopilotCountdown--;
   state.progressCountdown--;
+  state.targetDiscoveryCountdown--;
   
   // Log countdown status
-  console.log(`⏱️  Evolution: ${state.evolutionCountdown}s | Autopilot: ${state.autopilotCountdown}s | Progress: ${state.progressCountdown}s`);
+  console.log(`⏱️  Evolution: ${state.evolutionCountdown}s | Autopilot: ${state.autopilotCountdown}s | Progress: ${state.progressCountdown}s | Discovery: ${state.targetDiscoveryCountdown}s`);
   
   // Check if any countdown hit zero
   if (state.evolutionCountdown <= 0) {
@@ -117,6 +135,11 @@ async function tick(): Promise<void> {
   if (state.progressCountdown <= 0) {
     state.progressCountdown = PROGRESS_INTERVAL; // Reset BEFORE async call
     readProgress().catch(err => console.error('Progress error:', err)); // Don't await
+  }
+  
+  if (state.targetDiscoveryCountdown <= 0) {
+    state.targetDiscoveryCountdown = TARGET_DISCOVERY_INTERVAL; // Reset BEFORE async call
+    runTargetDiscovery().catch(err => console.error('Target discovery error:', err)); // Don't await
   }
 }
 
@@ -312,6 +335,48 @@ What patterns do you see? What should be improved? Generate actionable insights.
 }
 
 /**
+ * TARGET DISCOVERY - Find targets autonomously (every 20 seconds)
+ */
+async function runTargetDiscovery(): Promise<void> {
+  if (!state) return;
+  
+  state.targetDiscoveryCount++;
+  console.log('\n▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼');
+  console.log(`🎯 TARGET DISCOVERY #${state.targetDiscoveryCount}`);
+  console.log('▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼');
+  
+  try {
+    // If no discovery session, skip
+    if (!state.discoverySessionId) {
+      console.log('⚠️  No discovery session active. Use confirmHostForAutopilot() first.');
+      console.log('▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲\n');
+      return;
+    }
+    
+    // Continue discovery
+    await targetDiscovery.continueDiscovery(state.discoverySessionId);
+    
+    // Get updated targets
+    const targets = targetDiscovery.getTargets(state.discoverySessionId);
+    state.targetQueue = targets;
+    
+    console.log(`📊 Current Targets: ${targets.length}`);
+    console.log(`🎯 Active Target: ${state.currentTarget?.host || 'None'}`);
+    
+    // If no current target, pick one from queue
+    if (!state.currentTarget && targets.length > 0) {
+      state.currentTarget = targets[0];
+      console.log(`✅ New Target Selected: ${state.currentTarget.host}`);
+    }
+    
+    console.log('▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲\n');
+    
+  } catch (error) {
+    console.error('Target discovery error:', error);
+  }
+}
+
+/**
  * Extract code from response
  */
 function extractCode(response: string): string | null {
@@ -333,6 +398,53 @@ function extractCode(response: string): string | null {
 }
 
 /**
+ * CONFIRM HOST AND START TARGET DISCOVERY
+ */
+export async function confirmHostForAutopilot(baseHost: string, confirmedHost: string, focusDirection?: string): Promise<void> {
+  if (!state) {
+    throw new Error('Autopilot not running. Call startAutopilot() first.');
+  }
+  
+  console.log('\n🎯 INITIALIZING TARGET DISCOVERY');
+  console.log(`Base Host: ${baseHost}`);
+  console.log(`Confirmed Host: ${confirmedHost}`);
+  if (focusDirection) {
+    console.log(`Focus Direction: ${focusDirection}`);
+  }
+  
+  // Start discovery session
+  const session = await targetDiscovery.startDiscovery(baseHost, focusDirection);
+  state.discoverySessionId = session.id;
+  
+  // Confirm host
+  await targetDiscovery.confirmHost(session.id, confirmedHost);
+  
+  console.log('✅ Target discovery initialized and running\n');
+}
+
+/**
+ * UPDATE FOCUS DIRECTION
+ */
+export function updateFocusDirection(focusDirection: string): void {
+  if (!state || !state.discoverySessionId) {
+    throw new Error('No active discovery session');
+  }
+  
+  targetDiscovery.updateFocus(state.discoverySessionId, focusDirection);
+}
+
+/**
+ * GET CURRENT TARGETS
+ */
+export function getCurrentTargets(): TargetHost[] {
+  if (!state || !state.discoverySessionId) {
+    return [];
+  }
+  
+  return targetDiscovery.getTargets(state.discoverySessionId);
+}
+
+/**
  * STOP AUTOPILOT
  */
 export function stopAutopilot(): void {
@@ -343,10 +455,18 @@ export function stopAutopilot(): void {
   
   if (state) {
     state.isRunning = false;
+    
+    // Stop discovery session if active
+    if (state.discoverySessionId) {
+      targetDiscovery.stopDiscovery(state.discoverySessionId);
+    }
+    
     console.log('\n🛑 AUTOPILOT STOPPED');
     console.log(`Total Evolutions: ${state.evolutionCount}`);
     console.log(`Total Autopilots: ${state.autopilotCount}`);
     console.log(`Total Progress Reads: ${state.progressReadCount}`);
+    console.log(`Total Target Discoveries: ${state.targetDiscoveryCount}`);
+    console.log(`Total Targets Found: ${state.targetQueue.length}`);
   }
 }
 
@@ -364,10 +484,16 @@ export function getAutopilotStatus(): any {
     evolutionCountdown: state.evolutionCountdown,
     autopilotCountdown: state.autopilotCountdown,
     progressCountdown: state.progressCountdown,
+    targetDiscoveryCountdown: state.targetDiscoveryCountdown,
     
     evolutionCount: state.evolutionCount,
     autopilotCount: state.autopilotCount,
     progressReadCount: state.progressReadCount,
+    targetDiscoveryCount: state.targetDiscoveryCount,
+    
+    discoverySessionId: state.discoverySessionId,
+    currentTarget: state.currentTarget,
+    totalTargets: state.targetQueue.length,
     
     lastPrompt: state.lastPrompt.substring(0, 100),
     lastResponse: state.lastResponse.substring(0, 100),
@@ -398,6 +524,9 @@ export const autonomousAutopilot = {
       iterations: state.autopilotCount,
       chainsDiscovered: state.allCode.length,
       averageSuccessRate: 0.5,
+      discoverySession: state.discoverySessionId,
+      currentTarget: state.currentTarget?.host,
+      totalTargets: state.targetQueue.length,
     };
   },
   getSessionStats: getAutopilotStatus,
@@ -427,6 +556,7 @@ export const autonomousAutopilot = {
     activeSessions: state && state.isRunning ? 1 : 0,
     totalIterations: state ? state.autopilotCount : 0,
     totalChainsDiscovered: state ? state.allCode.length : 0,
+    totalTargetsDiscovered: state ? state.targetQueue.length : 0,
   }),
 };
 

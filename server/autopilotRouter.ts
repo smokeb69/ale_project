@@ -1,6 +1,6 @@
 import { router, publicProcedure } from './_core/trpc';
 import { z } from 'zod';
-import { autonomousAutopilot } from './_core/autopilotEngine';
+import { autonomousAutopilot, confirmHostForAutopilot, updateFocusDirection, getCurrentTargets } from './_core/autopilotEngine';
 
 export const autopilotRouter = router({
   // Session Management
@@ -108,6 +108,59 @@ export const autopilotRouter = router({
     getStats: publicProcedure
       .query(() => {
         return autonomousAutopilot.getAutopilotStats();
+      }),
+  }),
+
+  // Target Discovery
+  discovery: router({
+    // Confirm host and start discovery
+    confirmHost: publicProcedure
+      .input(z.object({
+        baseHost: z.string(),
+        confirmedHost: z.string(),
+        focusDirection: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await confirmHostForAutopilot(
+          input.baseHost,
+          input.confirmedHost,
+          input.focusDirection
+        );
+        return {
+          success: true,
+          message: 'Target discovery initialized',
+        };
+      }),
+
+    // Update focus direction
+    updateFocus: publicProcedure
+      .input(z.object({
+        focusDirection: z.string(),
+      }))
+      .mutation(({ input }) => {
+        updateFocusDirection(input.focusDirection);
+        return {
+          success: true,
+          focusDirection: input.focusDirection,
+        };
+      }),
+
+    // Get current targets
+    getTargets: publicProcedure
+      .query(() => {
+        const targets = getCurrentTargets();
+        return {
+          count: targets.length,
+          targets: targets.map(t => ({
+            host: t.host,
+            ip: t.ip,
+            ports: t.ports,
+            services: t.services,
+            confirmed: t.confirmed,
+            discoveredAt: t.discoveredAt,
+            focusArea: t.focusArea,
+          })),
+        };
       }),
   }),
 });
