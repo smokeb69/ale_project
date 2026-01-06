@@ -641,7 +641,7 @@
                     </optgroup>
                 </select>
                 <div class="token-info" id="tokenInfo">
-                    Max tokens: Unlimited (up to 2M for Gemini 1.5 Pro)
+                    Max output tokens: 4K-32K (safe limits per model)
                 </div>
             </div>
         </div>
@@ -731,22 +731,36 @@
         let unlimitedTokens = true;
         let adminOverride = true;
         
-        // Model token limits
+        // Model token limits - SAFE OUTPUT LIMITS (not context window)
+        // Based on actual Forge API limits to prevent errors
         const modelTokenLimits = {
-            'gemini-1.5-pro': 2000000,
-            'gemini-2.5-pro': 1000000,
-            'gemini-2.5-flash': 1000000,
-            'gemini-1.5-flash': 1000000,
-            'claude-3.5-sonnet': 200000,
-            'claude-3.5-sonnet-v2': 200000,
-            'claude-3-opus': 200000,
-            'o1': 200000,
-            'gpt-4.1-mini': 128000,
-            'gpt-4.1-nano': 128000,
-            'gpt-4o': 128000,
-            'gpt-4o-mini': 128000,
-            'gpt-4-turbo': 128000,
-            'default': 100000
+            // Most models support 4K-8K output tokens
+            'claude-3-haiku': 4000,
+            'claude-3-sonnet': 4000,
+            'claude-3-opus': 4000,
+            'claude-3.5-sonnet': 8000,
+            'claude-3.5-sonnet-v2': 8000,
+            'gpt-4.1-mini': 16000,
+            'gpt-4.1-nano': 16000,
+            'gpt-4o': 16000,
+            'gpt-4o-mini': 16000,
+            'gpt-4-turbo': 4000,
+            'gpt-4': 4000,
+            'gpt-3.5-turbo': 4000,
+            'o1': 32000,
+            'o1-mini': 16000,
+            'o1-preview': 32000,
+            'gemini-2.5-flash': 8000,
+            'gemini-2.5-pro': 8000,
+            'gemini-1.5-pro': 8000,
+            'gemini-1.5-flash': 8000,
+            'gemini-1.0-pro': 4000,
+            'deepseek-v3': 8000,
+            'deepseek-v2.5': 8000,
+            'deepseek-v2': 4000,
+            'deepseek-coder': 4000,
+            'deepseek-r1': 8000,
+            'default': 4000  // Safe default
         };
         
         // Initialize
@@ -805,13 +819,9 @@
             const limit = modelTokenLimits[currentModel] || modelTokenLimits['default'];
             
             if (unlimitedTokens) {
-                if (thinkingEnabled) {
-                    tokenInfo.textContent = `Max tokens: Unlimited (Thinking mode: up to ${(limit/1000).toFixed(0)}K tokens)`;
-                } else {
-                    tokenInfo.textContent = `Max tokens: Unlimited (up to ${(limit/1000).toFixed(0)}K for ${currentModel})`;
-                }
+                tokenInfo.textContent = `Max output tokens: ${(limit/1000).toFixed(0)}K for ${currentModel}`;
             } else {
-                tokenInfo.textContent = `Max tokens: ${thinkingEnabled ? '32K (Thinking)' : '8K (Standard)'}`;
+                tokenInfo.textContent = `Max output tokens: ${thinkingEnabled ? '8K (Thinking)' : '4K (Standard)'}`;
             }
         }
         
@@ -1006,12 +1016,16 @@ IMPORTANT: You have access to recent conversation context from previous exchange
             return messages;
         }
         
-        // Calculate max tokens
+        // Calculate max tokens - safe limits to prevent API errors
         function getMaxTokens() {
+            const modelLimit = modelTokenLimits[currentModel] || modelTokenLimits['default'];
+            
             if (unlimitedTokens) {
-                return modelTokenLimits[currentModel] || modelTokenLimits['default'];
+                // Use model's safe limit
+                return modelLimit;
             } else {
-                return thinkingEnabled ? 32768 : 8000;
+                // Use conservative limits
+                return thinkingEnabled ? Math.min(8000, modelLimit) : Math.min(4000, modelLimit);
             }
         }
         
