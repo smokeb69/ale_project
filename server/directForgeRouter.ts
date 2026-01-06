@@ -283,7 +283,7 @@ OUTPUT:`;
 
 /**
  * POST /api/chat/forge/orchestrated
- * Orchestrated chat - automatically selects best model for the task
+ * TRUE ORCHESTRATION - Multiple models collaborate to build complete solutions
  */
 router.post("/chat/forge/orchestrated", async (req: Request, res: Response) => {
   try {
@@ -296,28 +296,109 @@ router.post("/chat/forge/orchestrated", async (req: Request, res: Response) => {
       });
     }
 
-    console.log(`[Orchestrator] Analyzing task type: ${taskType || 'auto'}`);
-
-    // Intelligent model selection based on task
-    let selectedModel = "gpt-4.1-mini"; // Default
+    console.log(`[Orchestrator] TRUE MULTI-MODEL ORCHESTRATION`);
 
     const lastUserMessage = messages.filter(m => m.role === 'user').pop()?.content || "";
     const messageLower = lastUserMessage.toLowerCase();
 
-    // Task-based model selection
-    if (taskType === 'coding' || messageLower.includes('code') || messageLower.includes('function') || messageLower.includes('debug')) {
-      selectedModel = "deepseek-v3"; // Best for coding
-    } else if (taskType === 'creative' || messageLower.includes('story') || messageLower.includes('creative') || messageLower.includes('write')) {
-      selectedModel = "claude-3.5-sonnet"; // Best for creative writing
-    } else if (taskType === 'reasoning' || messageLower.includes('analyze') || messageLower.includes('explain') || messageLower.includes('think')) {
-      selectedModel = "gpt-4o"; // Best for reasoning
-    } else if (taskType === 'fast' || messageLower.includes('quick') || messageLower.includes('simple')) {
-      selectedModel = "gpt-4.1-nano"; // Fastest
-    } else if (messageLower.includes('math') || messageLower.includes('calculate')) {
-      selectedModel = "gemini-2.5-flash"; // Good for math
+    // Define orchestration team based on task
+    let orchestrationTeam: Array<{model: string, role: string}> = [];
+
+    if (messageLower.includes('code') || messageLower.includes('build') || messageLower.includes('create')) {
+      // Code/Build task - use specialist team
+      orchestrationTeam = [
+        { model: 'gpt-4o', role: 'Architect - Design the solution structure' },
+        { model: 'deepseek-v3', role: 'Developer - Write the implementation code' },
+        { model: 'claude-3.5-sonnet', role: 'Reviewer - Check for errors and improvements' },
+        { model: 'gpt-4.1-mini', role: 'Integrator - Combine everything into final solution' }
+      ];
+    } else if (messageLower.includes('analyze') || messageLower.includes('explain')) {
+      // Analysis task - use reasoning team
+      orchestrationTeam = [
+        { model: 'gpt-4o', role: 'Analyzer - Deep analysis' },
+        { model: 'claude-3.5-sonnet', role: 'Synthesizer - Combine insights' },
+        { model: 'gemini-2.5-flash', role: 'Summarizer - Create final summary' }
+      ];
+    } else {
+      // General task - balanced team
+      orchestrationTeam = [
+        { model: 'gpt-4o', role: 'Planner - Create approach' },
+        { model: 'claude-3.5-sonnet', role: 'Executor - Implement solution' },
+        { model: 'gpt-4.1-mini', role: 'Finalizer - Polish and complete' }
+      ];
     }
 
-    console.log(`[Orchestrator] Selected model: ${selectedModel}`);
+    console.log(`[Orchestrator] Team: ${orchestrationTeam.map(t => t.model).join(', ')}`);
+
+    // Execute orchestration - each model builds on previous
+    let orchestrationResult = "";
+    let currentContext = lastUserMessage;
+
+    for (let i = 0; i < orchestrationTeam.length; i++) {
+      const member = orchestrationTeam[i];
+      console.log(`[Orchestrator] Step ${i+1}/${orchestrationTeam.length}: ${member.model} (${member.role})`);
+
+      const stepMessages = [
+        {
+          role: "system",
+          content: `[MODEL_ROUTING] Requested model: ${member.model}. Route this request to ${member.model} backend.\n\nYou are part of an orchestrated team. Your role: ${member.role}.\n\nPrevious work: ${orchestrationResult}\n\nBuild upon this and contribute your specialized part.`
+        },
+        {
+          role: "user",
+          content: currentContext
+        }
+      ];
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${FORGE_API_KEY}`,
+        "X-API-Key": FORGE_API_KEY,
+      };
+
+      if (useAdmin) {
+        headers["X-Admin-Password"] = FORGE_ADMIN_PASSWORD;
+      }
+
+      const payload = {
+        model: member.model,
+        messages: stepMessages,
+        max_tokens,
+        stream: false,
+      };
+
+      try {
+        const response = await fetch(FORGE_URL, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+          const stepResult = data.choices[0].message.content;
+          orchestrationResult += `\n\n### ${member.role} (${member.model}):\n${stepResult}`;
+          currentContext = stepResult; // Next model builds on this
+        }
+      } catch (error) {
+        console.error(`[Orchestrator] Error with ${member.model}:`, error);
+      }
+    }
+
+    console.log(`[Orchestrator] Orchestration complete - ${orchestrationTeam.length} models collaborated`);
+
+    // Return the full orchestrated result
+    return res.json({
+      success: true,
+      content: `# 🎯 Orchestrated Solution\n\nTeam: ${orchestrationTeam.map(t => t.model).join(' → ')}\n${orchestrationResult}`,
+      model: orchestrationTeam.map(t => t.model).join(' + '),
+      orchestration: true
+    });
+
+    console.log(`[Orchestrator] OLD SINGLE-MODEL SELECTION (REPLACED WITH MULTI-MODEL)`);
+
+    // OLD CODE BELOW - KEPT FOR REFERENCE
+    let selectedModel = "gpt-4.1-mini"; // Default
 
     // Build headers
     const headers: Record<string, string> = {
