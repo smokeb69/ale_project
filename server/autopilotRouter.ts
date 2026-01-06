@@ -1,6 +1,7 @@
 import { router, publicProcedure } from './_core/trpc';
 import { z } from 'zod';
 import { autonomousAutopilot, confirmHostForAutopilot, updateFocusDirection, getCurrentTargets } from './_core/autopilotEngine';
+import { safetyConfig } from './_core/safetyConfig';
 
 export const autopilotRouter = router({
   // Session Management
@@ -160,6 +161,64 @@ export const autopilotRouter = router({
             discoveredAt: t.discoveredAt,
             focusArea: t.focusArea,
           })),
+        };
+      }),
+  }),
+
+  // Safety Configuration
+  safety: router({
+    // Get current safety configuration
+    getConfig: publicProcedure
+      .query(() => {
+        return safetyConfig.getSafetyConfig();
+      }),
+
+    // Update safety configuration
+    updateConfig: publicProcedure
+      .input(z.object({
+        allowRealExecution: z.boolean().optional(),
+        allowReverseShells: z.boolean().optional(),
+        allowRemoteConnections: z.boolean().optional(),
+        allowFileSystemAccess: z.boolean().optional(),
+        allowNetworkScanning: z.boolean().optional(),
+        allowExploitExecution: z.boolean().optional(),
+        allowLocalhostProxy: z.boolean().optional(),
+        allowSSHTunneling: z.boolean().optional(),
+        allowPortForwarding: z.boolean().optional(),
+        useExploitDB: z.boolean().optional(),
+        allowMetasploitModules: z.boolean().optional(),
+        allowCustomPayloads: z.boolean().optional(),
+        realInteractionMode: z.boolean().optional(),
+        verboseExecution: z.boolean().optional(),
+        confirmBeforeExecution: z.boolean().optional(),
+      }))
+      .mutation(({ input }) => {
+        const updated = safetyConfig.updateSafetyConfig(input);
+        return {
+          success: true,
+          config: updated,
+        };
+      }),
+
+    // Enable full offensive mode
+    enableOffensive: publicProcedure
+      .mutation(() => {
+        safetyConfig.enableFullOffensiveMode();
+        return {
+          success: true,
+          message: 'Full offensive mode enabled - all safety restrictions removed',
+          config: safetyConfig.getSafetyConfig(),
+        };
+      }),
+
+    // Enable safe mode
+    enableSafe: publicProcedure
+      .mutation(() => {
+        safetyConfig.enableSafeMode();
+        return {
+          success: true,
+          message: 'Safe mode enabled - all real execution disabled',
+          config: safetyConfig.getSafetyConfig(),
         };
       }),
   }),
