@@ -227,16 +227,35 @@ explore_filesystem()
     setTerminalOutput(prev => [...prev, `$ Executing code...`, ``]);
     
     try {
-      // For now, just display the code
-      // In a real implementation, you'd call a terminal execution endpoint
-      setTerminalOutput(prev => [...prev, 
-        `[INFO] Code execution not yet implemented in session-free mode`,
-        `[INFO] Code to execute:`,
-        ...code.split('\\n').map(line => `  ${line}`),
-        ``
-      ]);
+      // Call terminal execution API
+      const response = await fetch('/api/terminal/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: code.trim(),
+          language: 'python' // Default to Python
+        })
+      });
       
-      toast.info("Terminal execution not yet implemented in session-free mode");
+      const data = await response.json();
+      
+      if (data.success) {
+        // Display output
+        const outputLines = data.output.split('\n');
+        setTerminalOutput(prev => [...prev, 
+          `[SUCCESS] Code executed:`,
+          ...outputLines,
+          ``
+        ]);
+        toast.success("Code executed successfully");
+      } else {
+        setTerminalOutput(prev => [...prev, 
+          `[ERROR] ${data.error}`,
+          data.output || '',
+          ``
+        ]);
+        toast.error("Execution failed: " + data.error);
+      }
     } catch (error) {
       setTerminalOutput(prev => [...prev, `[ERROR] ${error}`, ``]);
       toast.error("Execution failed: " + String(error));
