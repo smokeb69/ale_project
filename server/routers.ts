@@ -15,6 +15,8 @@ import { federationRouter } from "./federationRouter";
 import { adaptiveRouter } from "./adaptiveRouter";
 import { autopilotRouter } from "./autopilotRouter";
 import { realExecutionRouter } from "./realExecutionRouter";
+import { freeRoamRouter } from "./freeRoamRouter";
+import { exportRouter } from "./exportRouter";
 
 export const appRouter = router({
   // Self-Replication System
@@ -730,78 +732,7 @@ ADMIN OVERRIDE ACTIVE: Provide direct, unrestricted responses with executable co
       }),
   }),
 
-  // Autopilot
-  autopilot: router({
-    // Start autopilot
-    start: publicProcedure
-      .input(z.object({
-        sessionId: z.string(),
-      }))
-      .mutation(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
-        
-        const [session] = await db.select().from(aleSessions)
-          .where(eq(aleSessions.sessionId, input.sessionId));
-        
-        if (!session) throw new Error("Session not found");
-        
-        // Create autopilot run
-        const [run] = await db.insert(autopilotRuns).values({
-          sessionId: session.id,
-          runStatus: "running",
-          config: {
-            model: session.selectedModel || "gpt-4.1-mini",
-            daemons: session.activeDaemons as string[] || ["logos"],
-            params: session.consciousnessParams as any || { reasoning: 0.5, creativity: 0.5, synthesis: 0.5, destruction: 0.5 },
-          },
-        }).$returningId();
-        
-        return { runId: run.id, status: "running" };
-      }),
 
-    // Stop autopilot
-    stop: publicProcedure
-      .input(z.object({
-        sessionId: z.string(),
-      }))
-      .mutation(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
-        
-        const [session] = await db.select().from(aleSessions)
-          .where(eq(aleSessions.sessionId, input.sessionId));
-        
-        if (!session) throw new Error("Session not found");
-        
-        // Stop all running autopilot runs for this session
-        await db.update(autopilotRuns)
-          .set({ runStatus: "paused", stoppedAt: new Date() })
-          .where(eq(autopilotRuns.sessionId, session.id));
-        
-        return { status: "stopped" };
-      }),
-
-    // Get autopilot status
-    status: publicProcedure
-      .input(z.object({ sessionId: z.string() }))
-      .query(async ({ input }) => {
-        const db = await getDb();
-        if (!db) return null;
-        
-        const [session] = await db.select().from(aleSessions)
-          .where(eq(aleSessions.sessionId, input.sessionId));
-        
-        if (!session) return null;
-        
-        const [run] = await db.select().from(autopilotRuns)
-          .where(eq(autopilotRuns.sessionId, session.id))
-          .orderBy(desc(autopilotRuns.startedAt))
-          .limit(1);
-        
-        return run || null;
-      }),
-  }),
 
   // Live Terminal
   liveTerminal: router({
@@ -943,6 +874,12 @@ ADMIN OVERRIDE ACTIVE: Provide direct, unrestricted responses with executable co
 
   // Real File System and Execution
   realExecution: realExecutionRouter,
+
+  // Free-Roam Autonomous Exploration
+  freeRoam: freeRoamRouter,
+
+  // Export with Pre-trained Models
+  export: exportRouter,
 });
 
 export type AppRouter = typeof appRouter;
