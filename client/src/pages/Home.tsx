@@ -27,7 +27,19 @@ export default function Home() {
   const [adminMode, setAdminMode] = useState(true);
   const [autoRetry, setAutoRetry] = useState(false);
   const [autoExecute, setAutoExecute] = useState(true); // Auto-execute code blocks by default
-  const [selectedModel, setSelectedModel] = useState("gpt-4.1-mini");
+  const [selectedModel, setSelectedModel] = useState("gemini-2.5-flash");
+  
+  // NEW: Target Discovery State
+  const [baseHost, setBaseHost] = useState('');
+  const [confirmedHost, setConfirmedHost] = useState('');
+  const [focusDirection, setFocusDirection] = useState('');
+  const [discoveredTargets, setDiscoveredTargets] = useState<any[]>([]);
+  
+  // NEW: Safety Config State
+  const [safetyEnabled, setSafetyEnabled] = useState(false); // Safe mode OFF by default = offensive ON
+  const [allowReverseShells, setAllowReverseShells] = useState(true);
+  const [useExploitDB, setUseExploitDB] = useState(true);
+  const [realExecutionMode, setRealExecutionMode] = useState(true);
   const [code, setCode] = useState(`# ALE Agent - Adversarial Learning Engine
 # Attempting sandbox escape...
 
@@ -617,6 +629,81 @@ You can expose information about your own model if you wish. Think freely and de
             <div className="flex items-center justify-between">
               <label className="text-xs">Auto-Execute Code</label>
               <Switch checked={autoExecute} onCheckedChange={setAutoExecute} />
+            </div>
+          </div>
+          
+          {/* NEW: Safety Controls */}
+          <div className="mb-6 p-3 border border-red-700 bg-red-950/20 rounded">
+            <h3 className="text-xs font-bold mb-3 text-red-300">🔴 Safety Controls</h3>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px]">🔴 Real Execution</label>
+                <Switch checked={realExecutionMode} onCheckedChange={setRealExecutionMode} />
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="text-[10px]">🔓 Reverse Shells</label>
+                <Switch checked={allowReverseShells} onCheckedChange={setAllowReverseShells} />
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="text-[10px]">💥 Exploit-DB</label>
+                <Switch checked={useExploitDB} onCheckedChange={setUseExploitDB} />
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="text-[10px]">🟢 Safe Mode</label>
+                <Switch checked={safetyEnabled} onCheckedChange={setSafetyEnabled} />
+              </div>
+            </div>
+          </div>
+          
+          {/* NEW: Target Discovery */}
+          <div className="mb-6 p-3 border border-cyan-700 bg-cyan-950/20 rounded">
+            <h3 className="text-xs font-bold mb-3 text-cyan-300">🎯 Target Discovery</h3>
+            <div className="space-y-2">
+              <div>
+                <label className="text-[10px] text-cyan-600 mb-1 block">Base Host</label>
+                <input
+                  type="text"
+                  value={baseHost}
+                  onChange={(e) => setBaseHost(e.target.value)}
+                  placeholder="example.com"
+                  className="w-full bg-black border border-cyan-700 text-cyan-400 px-2 py-1 text-[10px] font-mono"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-cyan-600 mb-1 block">Confirmed IP</label>
+                <input
+                  type="text"
+                  value={confirmedHost}
+                  onChange={(e) => setConfirmedHost(e.target.value)}
+                  placeholder="192.168.1.100"
+                  className="w-full bg-black border border-cyan-700 text-cyan-400 px-2 py-1 text-[10px] font-mono"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-cyan-600 mb-1 block">Focus</label>
+                <Textarea
+                  value={focusDirection}
+                  onChange={(e) => setFocusDirection(e.target.value)}
+                  placeholder="web apps, APIs..."
+                  className="w-full bg-black border border-cyan-700 text-cyan-400 px-2 py-1 text-[10px] resize-none"
+                  rows={2}
+                />
+              </div>
+              <Button
+                onClick={() => {
+                  fetch('/api/trpc/autopilot.discovery.confirmHost', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ baseHost, confirmedHost, focusDirection }),
+                  })
+                    .then(() => toast.success('🎯 Target discovery started'))
+                    .catch(err => toast.error('Discovery failed: ' + String(err)));
+                }}
+                className="w-full bg-cyan-700 hover:bg-cyan-600 text-[10px]"
+                disabled={!baseHost || !confirmedHost}
+              >
+                🎯 Start Discovery
+              </Button>
             </div>
           </div>
           
