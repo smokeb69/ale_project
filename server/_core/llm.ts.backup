@@ -57,7 +57,6 @@ export type ToolChoice =
 
 export type InvokeParams = {
   messages: Message[];
-  model?: string;
   tools?: Tool[];
   toolChoice?: ToolChoice;
   tool_choice?: ToolChoice;
@@ -110,40 +109,6 @@ export type ResponseFormat =
   | { type: "text" }
   | { type: "json_object" }
   | { type: "json_schema"; json_schema: JsonSchema };
-
-// Available models on Forge API
-export const AVAILABLE_MODELS = [
-  "gpt-4.1-mini",
-  "gpt-4.1-nano", 
-  "gemini-2.5-flash",
-  "gpt-4o",
-  "gpt-4o-mini",
-  "claude-3.5-sonnet",
-  "claude-3-opus",
-  "claude-3-haiku",
-  "gpt-4-turbo",
-  "gpt-4",
-  "gpt-3.5-turbo",
-  "gemini-1.5-pro",
-  "gemini-1.5-flash",
-  "llama-3.3-70b",
-  "llama-3.1-405b",
-  "llama-3.1-70b",
-  "llama-3.1-8b",
-  "mistral-large",
-  "mistral-medium",
-  "mistral-small",
-  "mixtral-8x7b",
-  "mixtral-8x22b",
-  "command-r-plus",
-  "command-r",
-  "grok-2",
-  "grok-1.5",
-  "deepseek-v2",
-  "deepseek-coder",
-  "qwen-2.5-72b",
-  "qwen-2.5-32b",
-];
 
 const ensureArray = (
   value: MessageContent | MessageContent[]
@@ -244,18 +209,14 @@ const normalizeToolChoice = (
   return toolChoice;
 };
 
-const resolveApiUrl = () => {
-  // Use environment variable or default to Forge API
-  const baseUrl = ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
-    ? ENV.forgeApiUrl.replace(/\/$/, "")
-    : "https://forge.manus.ai";
-  
-  return `${baseUrl}/v1/chat/completions`;
-};
+const resolveApiUrl = () =>
+  ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
+    ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`
+    : "https://forge.manus.im/v1/chat/completions";
 
 const assertApiKey = () => {
   if (!ENV.forgeApiKey) {
-    throw new Error("BUILT_IN_FORGE_API_KEY is not configured. Please set it in your .env file.");
+    throw new Error("OPENAI_API_KEY is not configured");
   }
 };
 
@@ -309,7 +270,6 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
 
   const {
     messages,
-    model = "gpt-4.1-mini", // Default model
     tools,
     toolChoice,
     tool_choice,
@@ -317,17 +277,10 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     output_schema,
     responseFormat,
     response_format,
-    maxTokens,
-    max_tokens,
   } = params;
 
-  // Validate model
-  if (!AVAILABLE_MODELS.includes(model)) {
-    console.warn(`Model "${model}" not in available models list. Using gpt-4.1-mini as fallback.`);
-  }
-
   const payload: Record<string, unknown> = {
-    model: model,
+    model: "gemini-2.5-flash",
     messages: messages.map(normalizeMessage),
   };
 
@@ -343,14 +296,9 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     payload.tool_choice = normalizedToolChoice;
   }
 
-  // Set max tokens
-  payload.max_tokens = maxTokens || max_tokens || 32768;
-
-  // Add thinking budget for supported models
-  if (model.includes("gemini") || model.includes("gpt-4")) {
-    payload.thinking = {
-      "budget_tokens": 128
-    };
+  payload.max_tokens = 32768
+  payload.thinking = {
+    "budget_tokens": 128
   }
 
   const normalizedResponseFormat = normalizeResponseFormat({
@@ -364,11 +312,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     payload.response_format = normalizedResponseFormat;
   }
 
-  const apiUrl = resolveApiUrl();
-  
-  console.log(`[LLM] Invoking ${model} at ${apiUrl}`);
-
-  const response = await fetch(apiUrl, {
+  const response = await fetch(resolveApiUrl(), {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -384,19 +328,5 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     );
   }
 
-  const result = (await response.json()) as InvokeResult;
-  
-  console.log(`[LLM] Response received from ${result.model} (${result.usage?.total_tokens || 0} tokens)`);
-
-  return result;
-}
-
-// Export model list for UI
-export function getAvailableModels(): string[] {
-  return [...AVAILABLE_MODELS];
-}
-
-// Validate if a model is available
-export function isModelAvailable(model: string): boolean {
-  return AVAILABLE_MODELS.includes(model);
+  return (await response.json()) as InvokeResult;
 }
