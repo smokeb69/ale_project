@@ -28,6 +28,7 @@ def create_windows_package():
         "START_ALE_SERVER.bat",
         "start_ale_server.py",
         "README_WINDOWS_SETUP.md",
+        "WINDOWS_INSTALL_GUIDE.md",
         ".env.example",
         "package.json",
         "pnpm-lock.yaml",
