@@ -13,17 +13,47 @@ The system now automatically uses the Forge AI API at `https://forge.manus.ai/v1
 **Automatic Configuration:**
 - **Default Forge URL**: `https://forge.manus.ai/v1/chat/completions`
 - **Default API Key**: `mEU8sWrVuDTgj3HdEWEWDD`
+- **Default Model**: `gemini-2.5-flash`
 
 These are configured automatically in [`server/_core/env.ts`](server/_core/env.ts:8). You can override them with environment variables:
 - `BUILT_IN_FORGE_API_URL` - Custom Forge API URL
 - `BUILT_IN_FORGE_API_KEY` - Custom API key
+- `DEFAULT_MODEL` - Default model to use
+
+**Model Routing:**
+The system supports **ALL models available through Forge/Manus API** (100+ models). You can specify any model in two ways:
+
+1. **Per-request**: Pass `model` parameter to [`invokeLLM()`](server/_core/llm.ts:268)
+```typescript
+await invokeLLM({
+  messages: [...],
+  model: "claude-3-5-sonnet-20241022"  // Any Forge-supported model
+});
+```
+
+2. **Global default**: Set `DEFAULT_MODEL` environment variable
+```bash
+export DEFAULT_MODEL="gpt-4-turbo"
+```
+
+**Supported Model Examples:**
+- `gemini-2.5-flash` (default)
+- `gemini-2.0-flash-exp`
+- `claude-3-5-sonnet-20241022`
+- `gpt-4-turbo`
+- `gpt-4o`
+- `llama-3.3-70b`
+- `deepseek-chat`
+- `qwen-2.5-72b`
+- And 100+ more via Forge/Manus
 
 **LLM Configuration:**
-The system uses `gemini-2.5-flash` model with:
+Default settings:
 - Max tokens: 32,768
 - Thinking budget: 128 tokens
 - Full tool support
 - JSON response format support
+- Automatic model routing to any Forge-supported model
 
 ### 2. Autonomous Target Discovery
 
@@ -249,9 +279,60 @@ Autopilot uses target for exploitation
 # Forge API Configuration
 export BUILT_IN_FORGE_API_URL="https://forge.manus.ai"
 export BUILT_IN_FORGE_API_KEY="mEU8sWrVuDTgj3HdEWEWDD"
+export DEFAULT_MODEL="gemini-2.5-flash"
 
 # Or use defaults (already configured)
 ```
+
+### Switching Models
+
+**Use a specific model for all operations:**
+```bash
+export DEFAULT_MODEL="claude-3-5-sonnet-20241022"
+# Restart the server
+```
+
+**Use different models for different operations:**
+```typescript
+// Discovery with fast model
+await invokeLLM({
+  messages: discoveryMessages,
+  model: "gemini-2.0-flash-exp"
+});
+
+// Exploitation with advanced model
+await invokeLLM({
+  messages: exploitMessages,
+  model: "claude-3-5-sonnet-20241022"
+});
+
+// Code generation with specialized model
+await invokeLLM({
+  messages: codeMessages,
+  model: "deepseek-chat"
+});
+```
+
+### Available Model Categories
+
+Forge/Manus supports 100+ models across categories:
+
+**Fast & Efficient:**
+- `gemini-2.0-flash-exp`, `gemini-2.5-flash`
+- `gpt-4o-mini`, `claude-3-5-haiku-20241022`
+
+**Advanced Reasoning:**
+- `claude-3-5-sonnet-20241022`, `gpt-4-turbo`, `gpt-4o`
+- `gemini-2.0-flash-thinking-exp`
+
+**Code Specialized:**
+- `deepseek-chat`, `qwen-2.5-coder-32b`
+
+**Open Source:**
+- `llama-3.3-70b`, `llama-3.1-405b`, `mixtral-8x7b`
+- `qwen-2.5-72b`, `command-r-plus`
+
+**Note**: All models route through the same Forge API endpoint. The system automatically handles model-specific configurations.
 
 ### Focus Direction Examples
 
