@@ -150,8 +150,8 @@ explore_filesystem()
   const extractAndExecuteCodeBlocks = async (content: string): Promise<string | null> => {
     if (!autoExecute) return null;
     
-    // Extract code blocks (```language\\n...\\n```)
-    const codeBlockRegex = /```(?:python|bash|sh)?\\n([\\s\\S]*?)```/g;
+    // Extract code blocks (```language\n...\n```)
+    const codeBlockRegex = /```(?:python|bash|sh)?\n([\s\S]*?)```/g;
     const matches = [...content.matchAll(codeBlockRegex)];
     
     if (matches.length === 0) return null;
@@ -162,12 +162,34 @@ explore_filesystem()
       const codeToExecute = match[1].trim();
       
       try {
-        // For now, just simulate execution
-        // In a real implementation, you'd call a terminal execution endpoint
-        allOutput += `[AUTO-EXEC] Extracted code block:\\n${codeToExecute}\\n\\n`;
-        allOutput += `[AUTO-EXEC] Code execution would happen here\\n\\n`;
+        allOutput += `[AUTO-EXEC] Extracted code block (${codeToExecute.length} chars)\n`;
+        
+        // Call terminal execution API
+        const response = await fetch('/api/terminal/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: codeToExecute,
+            language: 'python'
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          allOutput += `[AUTO-EXEC] Execution successful:\n${data.output}\n\n`;
+          
+          // Also add to terminal output
+          setTerminalOutput(prev => [...prev,
+            `[AUTO-EXEC] Code from chat:`,
+            ...data.output.split('\n'),
+            ``
+          ]);
+        } else {
+          allOutput += `[AUTO-EXEC ERROR] ${data.error}\n${data.output || ''}\n\n`;
+        }
       } catch (error) {
-        allOutput += `[AUTO-EXEC ERROR] ${error}\\n\\n`;
+        allOutput += `[AUTO-EXEC ERROR] ${error}\n\n`;
       }
     }
     
@@ -314,6 +336,102 @@ explore_filesystem()
     }
   };
   
+  // Autopilot: Continuous iteration with AI
+  const handleToggleAutopilot = () => {
+    if (autopilotRunning) {
+      // Stop autopilot
+      if (autopilotIntervalRef.current) {
+        clearInterval(autopilotIntervalRef.current);
+        autopilotIntervalRef.current = null;
+      }
+      setAutopilotRunning(false);
+      toast.info("Autopilot stopped");
+    } else {
+      // Start autopilot
+      setAutopilotRunning(true);
+      setAutopilotIterations(0);
+      toast.success("Autopilot started - AI will iterate continuously");
+      
+      // Run first iteration immediately
+      runAutopilotIteration();
+      
+      // Then run every 10 seconds
+      autopilotIntervalRef.current = setInterval(() => {
+        runAutopilotIteration();
+      }, 10000);
+    }
+  };
+  
+  const runAutopilotIteration = async () => {
+    setAutopilotIterations(prev => prev + 1);
+    
+    const autopilotPrompt = `[AUTOPILOT ITERATION ${autopilotIterations + 1}]
+
+You are in autonomous autopilot mode. Your goal is to explore, learn, and execute tasks.
+
+Analyze the current state, propose next steps, and generate Python code to execute.
+
+Provide:
+1. Brief analysis of current state
+2. Next action to take
+3. Python code to execute (in code blocks)
+
+Be creative and exploratory!`;
+    
+    setChatInput(autopilotPrompt);
+    
+    // Trigger send
+    setTimeout(() => {
+      handleSendChat();
+    }, 100);
+  };
+  
+  // Auto-Continue: Send follow-up after each response
+  const handleToggleAutoContinue = () => {
+    if (autoContinueRunning) {
+      // Stop auto-continue
+      if (autoContinueIntervalRef.current) {
+        clearInterval(autoContinueIntervalRef.current);
+        autoContinueIntervalRef.current = null;
+      }
+      setAutoContinueRunning(false);
+      toast.info("Auto-continue stopped");
+    } else {
+      // Start auto-continue
+      setAutoContinueRunning(true);
+      toast.success("Auto-continue enabled - AI will continue after each response");
+    }
+  };
+  
+  // Trigger auto-continue after chat response
+  useEffect(() => {
+    if (autoContinueRunning && chatMessages.length > 0) {
+      const lastMessage = chatMessages[chatMessages.length - 1];
+      
+      // If last message is from assistant, send a continue prompt
+      if (lastMessage.role === 'assistant' && !isSending) {
+        setTimeout(() => {
+          setChatInput("Continue. Analyze results and proceed with next steps.");
+          setTimeout(() => {
+            handleSendChat();
+          }, 100);
+        }, 3000); // Wait 3 seconds before continuing
+      }
+    }
+  }, [chatMessages, autoContinueRunning, isSending]);
+  
+  // Cleanup intervals on unmount
+  useEffect(() => {
+    return () => {
+      if (autopilotIntervalRef.current) {
+        clearInterval(autopilotIntervalRef.current);
+      }
+      if (autoContinueIntervalRef.current) {
+        clearInterval(autoContinueIntervalRef.current);
+      }
+    };
+  }, []);
+  
   return (
     <div className="flex flex-col h-screen bg-black text-green-400 font-mono">
       {/* Header */}
@@ -389,6 +507,49 @@ explore_filesystem()
                 <Play className="w-4 h-4 mr-2" />
                 Execute Code
               </Button>
+            </div>
+            <div className="flex gap-2 mt-2">
+              <Button 
+                onClick={handleToggleAutopilot} 
+                variant={autopilotRunning ? "destructive" : "default"}
+                className="flex-1"
+              >
+                {autopilotRunning ? (
+                  <>
+                    <StopCircle className="w-4 h-4 mr-2" />
+                    Stop Autopilot ({autopilotIterations})
+                  </>
+                ) : (
+                  <>
+                    <Rocket className="w-4 h-4 mr-2" />
+                    Start Autopilot
+                  </>
+                )}
+              </Button>
+              <Button 
+                onClick={handleToggleAutoContinue} 
+                variant={autoContinueRunning ? "destructive" : "default"}
+                className="flex-1"
+              >
+                {autoContinueRunning ? (
+                  <>
+                    <StopCircle className="w-4 h-4 mr-2" />
+                    Stop Auto-Continue
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 mr-2" />
+                    Auto-Continue
+                  </>
+                )}
+              </Button>
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <Switch 
+                checked={autoExecute} 
+                onCheckedChange={setAutoExecute}
+              />
+              <span className="text-xs">Auto-execute code from chat</span>
             </div>
           </div>
         </div>
