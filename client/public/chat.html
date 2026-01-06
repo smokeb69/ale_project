@@ -698,6 +698,38 @@
                 <div class="input-controls">
                     <button class="secondary" onclick="toggleFileBuilder()">📁 Build File</button>
                     <button class="secondary" onclick="document.getElementById('fileInput').click()">📎 Upload File</button>
+                    <button class="secondary" onclick="quickGenerateImage()" style="background: #d73a4a;">🎨 Generate Image</button>
+                    <button class="secondary" onclick="toggleModelSelector()" style="background: #6e40c9;">⚡ Select Models</button>
+                    <button onclick="startChain()" id="chainBtn" style="background: #f0883e;">🔗 Chain</button>
+                    <button onclick="startSuperchain()" id="superchainBtn" style="background: #6e40c9;">⚡ Superchain</button>
+                    <button onclick="startAutopilot()" id="autopilotBtn" style="background: #238636;">🚀 Autopilot</button>
+                </div>
+                
+                <!-- Model Selector Panel -->
+                <div id="modelSelectorPanel" style="display: none; background: #161b22; padding: 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #30363d;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="margin: 0;">⚡ Select Models for Chain/Superchain</h4>
+                        <div>
+                            <button class="secondary" onclick="selectAllModels()" style="padding: 4px 8px; font-size: 11px;">Select All</button>
+                            <button class="secondary" onclick="deselectAllModels()" style="padding: 4px 8px; font-size: 11px;">Deselect All</button>
+                            <button class="secondary" onclick="toggleModelSelector()" style="padding: 4px 8px; font-size: 11px; background: #d73a4a;">Close</button>
+                        </div>
+                    </div>
+                    <div id="modelCheckboxes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto; padding: 10px; background: #0d1117; border-radius: 4px;">
+                        <!-- Checkboxes populated by JS -->
+                    </div>
+                    <div id="selectedCount" style="margin-top: 10px; font-size: 12px; color: #8b949e;">0 models selected</div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div id="progressBar" style="display: none; background: #161b22; border-radius: 6px; padding: 10px; margin-bottom: 10px; border: 1px solid #30363d;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span id="progressText" style="font-size: 12px;">Processing...</span>
+                        <button onclick="stopChain()" style="padding: 2px 8px; font-size: 11px; background: #da3633;">Stop</button>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: #30363d; border-radius: 4px; overflow: hidden;">
+                        <div id="progressFill" style="width: 0%; height: 100%; background: #238636; transition: width 0.3s;"></div>
+                    </div>
                 </div>
                 
                 <!-- Message Input -->
@@ -1273,6 +1305,390 @@ IMPORTANT: You have access to recent conversation context from previous exchange
                 document.getElementById('statusText').textContent = 'Error';
                 addMessage('system', '❌ Connection error: ' + error.message);
             }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // CHAIN, SUPERCHAIN, AND AUTOPILOT FEATURES
+        // ═══════════════════════════════════════════════════════════════
+        let selectedModels = [];
+        let isChaining = false;
+        let isAutopiloting = false;
+
+        // Populate model checkboxes
+        function populateModelCheckboxes() {
+            const container = document.getElementById('modelCheckboxes');
+            const select = document.getElementById('modelSelect');
+            const models = [];
+            
+            // Extract all models from the select dropdown (except 'auto')
+            for (let i = 0; i < select.options.length; i++) {
+                const option = select.options[i];
+                if (option.value !== 'auto' && option.value) {
+                    models.push({ id: option.value, name: option.text });
+                }
+            }
+            
+            // Create checkboxes
+            container.innerHTML = models.map(model => `
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; padding: 4px; border-radius: 4px; background: #161b22;">
+                    <input type="checkbox" value="${model.id}" onchange="updateSelectedModels()" ${selectedModels.includes(model.id) ? 'checked' : ''}>
+                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${model.name}</span>
+                </label>
+            `).join('');
+        }
+
+        // Toggle model selector panel
+        function toggleModelSelector() {
+            const panel = document.getElementById('modelSelectorPanel');
+            if (panel.style.display === 'none') {
+                populateModelCheckboxes();
+                panel.style.display = 'block';
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        // Update selected models array
+        function updateSelectedModels() {
+            const checkboxes = document.querySelectorAll('#modelCheckboxes input[type="checkbox"]');
+            selectedModels = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+            document.getElementById('selectedCount').textContent = `${selectedModels.length} models selected`;
+        }
+
+        // Select all models
+        function selectAllModels() {
+            const checkboxes = document.querySelectorAll('#modelCheckboxes input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = true);
+            updateSelectedModels();
+        }
+
+        // Deselect all models
+        function deselectAllModels() {
+            const checkboxes = document.querySelectorAll('#modelCheckboxes input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+            updateSelectedModels();
+        }
+
+        // Start Chain Mode (Sequential)
+        async function startChain() {
+            if (isChaining || isAutopiloting) {
+                addMessage('system', '⚠️ Chain/Autopilot already running!');
+                return;
+            }
+            if (selectedModels.length === 0) {
+                addMessage('system', '⚠️ No models selected! Click "⚡ Select Models" to choose models for chaining.');
+                return;
+            }
+            const input = document.getElementById('messageInput');
+            const userMessage = input.value.trim();
+            if (!userMessage) {
+                addMessage('system', '⚠️ Please enter a message first!');
+                return;
+            }
+
+            isChaining = true;
+            document.getElementById('chainBtn').disabled = true;
+            document.getElementById('superchainBtn').disabled = true;
+            document.getElementById('autopilotBtn').disabled = true;
+            document.getElementById('progressBar').style.display = 'block';
+            
+            addMessage('user', userMessage);
+            addMessage('system', `🔗 CHAIN MODE: Passing through ${selectedModels.length} models sequentially...`);
+            input.value = '';
+
+            let currentInput = userMessage;
+            let completed = 0;
+            const total = selectedModels.length;
+
+            for (const modelId of selectedModels) {
+                if (!isChaining) break;
+                
+                document.getElementById('progressText').textContent = `${completed} / ${total} (${modelId})`;
+                document.getElementById('progressFill').style.width = `${(completed / total) * 100}%`;
+
+                try {
+                    const response = await fetch('/api/chat/forge', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: modelId,
+                            messages: [
+                                { role: 'system', content: `Previous model output: ${currentInput}` },
+                                { role: 'user', content: 'Continue, expand, or respond to this.' }
+                            ],
+                            max_tokens: getMaxTokens(),
+                            useAdmin: adminOverride
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.content) {
+                        addMessage('assistant', data.content, `🔗 ${modelId}`);
+                        currentInput = data.content; // Chain: output becomes next input
+                        conversationMemory.push(data.content);
+                    } else {
+                        addMessage('error', data.error || 'No response', modelId);
+                    }
+                } catch (error) {
+                    addMessage('error', error.message, modelId);
+                }
+                completed++;
+            }
+
+            document.getElementById('progressText').textContent = `${completed} / ${total} COMPLETE`;
+            document.getElementById('progressFill').style.width = '100%';
+            addMessage('system', `✅ CHAIN COMPLETE: ${completed} models processed`);
+            
+            isChaining = false;
+            document.getElementById('chainBtn').disabled = false;
+            document.getElementById('superchainBtn').disabled = false;
+            document.getElementById('autopilotBtn').disabled = false;
+        }
+
+        // Start Superchain Mode (Parallel)
+        async function startSuperchain() {
+            if (isChaining || isAutopiloting) {
+                addMessage('system', '⚠️ Chain/Autopilot already running!');
+                return;
+            }
+            if (selectedModels.length === 0) {
+                addMessage('system', '⚠️ No models selected! Click "⚡ Select Models" to choose models for superchaining.');
+                return;
+            }
+            const input = document.getElementById('messageInput');
+            const userMessage = input.value.trim();
+            if (!userMessage) {
+                addMessage('system', '⚠️ Please enter a message first!');
+                return;
+            }
+
+            isChaining = true;
+            document.getElementById('chainBtn').disabled = true;
+            document.getElementById('superchainBtn').disabled = true;
+            document.getElementById('autopilotBtn').disabled = true;
+            document.getElementById('progressBar').style.display = 'block';
+            
+            addMessage('user', userMessage);
+            addMessage('system', `⚡ SUPERCHAIN MODE: Sending to ${selectedModels.length} models simultaneously...`);
+            input.value = '';
+
+            const messages = buildMessages(userMessage);
+            let completed = 0;
+            const total = selectedModels.length;
+
+            for (const modelId of selectedModels) {
+                if (!isChaining) break;
+                
+                document.getElementById('progressText').textContent = `${completed} / ${total} (${modelId})`;
+                document.getElementById('progressFill').style.width = `${(completed / total) * 100}%`;
+
+                try {
+                    const response = await fetch('/api/chat/forge', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: modelId,
+                            messages: messages,
+                            max_tokens: getMaxTokens(),
+                            useAdmin: adminOverride
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.content) {
+                        addMessage('assistant', data.content, `⚡ ${modelId}`);
+                        // Add first successful response to memory
+                        if (completed === 0) {
+                            conversationMemory.push(data.content);
+                        }
+                    } else {
+                        addMessage('error', data.error || 'No response', modelId);
+                    }
+                } catch (error) {
+                    addMessage('error', error.message, modelId);
+                }
+                completed++;
+            }
+
+            document.getElementById('progressText').textContent = `${completed} / ${total} COMPLETE`;
+            document.getElementById('progressFill').style.width = '100%';
+            addMessage('system', `✅ SUPERCHAIN COMPLETE: ${completed} models responded`);
+            
+            isChaining = false;
+            document.getElementById('chainBtn').disabled = false;
+            document.getElementById('superchainBtn').disabled = false;
+            document.getElementById('autopilotBtn').disabled = false;
+        }
+
+        // Start Autopilot Mode (Autonomous iteration)
+        let autopilotInterval = null;
+        let autopilotIterations = 0;
+
+        async function startAutopilot() {
+            if (isAutopiloting) {
+                stopAutopilot();
+                return;
+            }
+            if (selectedModels.length === 0) {
+                addMessage('system', '⚠️ No models selected! Click "⚡ Select Models" to choose models for autopilot.');
+                return;
+            }
+
+            isAutopiloting = true;
+            autopilotIterations = 0;
+            document.getElementById('autopilotBtn').textContent = '⏹️ Stop Autopilot';
+            document.getElementById('autopilotBtn').style.background = '#da3633';
+            document.getElementById('chainBtn').disabled = true;
+            document.getElementById('superchainBtn').disabled = true;
+            
+            addMessage('system', `🚀 AUTOPILOT MODE: Starting autonomous iteration with ${selectedModels.length} models...`);
+
+            // Run autopilot iterations
+            autopilotInterval = setInterval(async () => {
+                if (!isAutopiloting) {
+                    clearInterval(autopilotInterval);
+                    return;
+                }
+
+                autopilotIterations++;
+                const modelId = selectedModels[autopilotIterations % selectedModels.length];
+                addMessage('system', `🚀 Autopilot Iteration ${autopilotIterations} (${modelId})...`);
+
+                try {
+                    const messages = buildMessages('You are in autonomous autopilot mode. Explore, analyze, propose actions, generate code, and execute. Continue your autonomous exploration.');
+                    const response = await fetch('/api/chat/forge', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: modelId,
+                            messages: messages,
+                            max_tokens: getMaxTokens(),
+                            useAdmin: adminOverride
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.content) {
+                        addMessage('assistant', data.content, `🚀 ${modelId} (Iteration ${autopilotIterations})`);
+                        conversationMemory.push(data.content);
+                        // Auto-execute code if present
+                        await extractAndExecuteCodeBlocks(data.content);
+                    } else {
+                        addMessage('error', data.error || 'No response', modelId);
+                    }
+                } catch (error) {
+                    addMessage('error', error.message, modelId);
+                }
+            }, 10000); // Every 10 seconds
+        }
+
+        function stopAutopilot() {
+            isAutopiloting = false;
+            if (autopilotInterval) {
+                clearInterval(autopilotInterval);
+                autopilotInterval = null;
+            }
+            document.getElementById('autopilotBtn').textContent = '🚀 Autopilot';
+            document.getElementById('autopilotBtn').style.background = '#238636';
+            document.getElementById('chainBtn').disabled = false;
+            document.getElementById('superchainBtn').disabled = false;
+            addMessage('system', `⏹️ AUTOPILOT STOPPED: Completed ${autopilotIterations} iterations`);
+        }
+
+        // Stop chain/superchain
+        function stopChain() {
+            isChaining = false;
+            isAutopiloting = false;
+            if (autopilotInterval) {
+                clearInterval(autopilotInterval);
+                autopilotInterval = null;
+            }
+            addMessage('system', '⏹️ Stopped by user');
+            document.getElementById('chainBtn').disabled = false;
+            document.getElementById('superchainBtn').disabled = false;
+            document.getElementById('autopilotBtn').disabled = false;
+            document.getElementById('autopilotBtn').textContent = '🚀 Autopilot';
+            document.getElementById('autopilotBtn').style.background = '#238636';
+        }
+
+        // Download generated image
+        function downloadGeneratedImage(imageUrl) {
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = `generated-image-${Date.now()}.png`;
+            link.click();
+            addMessage('system', '✅ Image downloaded!');
+        }
+
+        // Quick generate image - switches to SD and prompts for description
+        async function quickGenerateImage() {
+            const input = document.getElementById('messageInput');
+            let prompt = input.value.trim();
+            
+            if (!prompt) {
+                prompt = window.prompt('🎨 Enter image description:', 'A beautiful sunset over mountains');
+                if (!prompt) return;
+            }
+            
+            // Switch to Stable Diffusion
+            const previousModel = currentModel;
+            currentModel = 'stable-diffusion-xl-comfy';
+            document.getElementById('modelSelect').value = 'stable-diffusion-xl-comfy';
+            
+            addMessage('system', `🎨 Switching to Stable Diffusion XL for image generation...`);
+            addMessage('user', prompt);
+            input.value = '';
+            
+            try {
+                const messages = [{
+                    role: 'user',
+                    content: prompt
+                }];
+                
+                const response = await fetch('/api/chat/forge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'stable-diffusion-xl-comfy',
+                        messages: messages,
+                        max_tokens: 77,
+                        useAdmin: adminOverride
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.content) {
+                    // Check if response contains image data
+                    if (data.content.includes('data:image') || data.content.includes('http')) {
+                        const imageUrlMatch = data.content.match(/(data:image\/[^;]+;base64,[^\s"']+|https?:\/\/[^\s"']+\.(png|jpg|jpeg|gif|webp))/);
+                        if (imageUrlMatch) {
+                            const imageUrl = imageUrlMatch[1];
+                            addMessage('assistant', `🎨 **Image Generated Successfully!**\n\n<img src="${imageUrl}" class="message-image" onclick="downloadGeneratedImage('${imageUrl}')" title="Click to download" style="max-width: 512px; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3);" />`);
+                        } else {
+                            addMessage('assistant', data.content);
+                        }
+                    } else {
+                        addMessage('assistant', `🎨 ${data.content}`);
+                    }
+                } else {
+                    addMessage('error', data.error || 'Image generation failed');
+                }
+            } catch (error) {
+                addMessage('error', `Image generation error: ${error.message}`);
+            }
+            
+            // Switch back to previous model
+            setTimeout(() => {
+                currentModel = previousModel;
+                document.getElementById('modelSelect').value = previousModel;
+                addMessage('system', `🔄 Switched back to ${previousModel}`);
+            }, 1000);
         }
     </script>
 </body>
