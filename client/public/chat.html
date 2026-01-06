@@ -630,7 +630,10 @@
                         <option value="qwen-2.5-coder-32b">qwen-2.5-coder-32b</option>
                         <option value="qwen-qwq-32b">qwen-qwq-32b</option>
                     </optgroup>
-                    <optgroup label="Others (5 models)">
+                    <optgroup label="Image Generation (1 model)">
+                        <option value="stable-diffusion-xl-comfy">🎨 Stable Diffusion XL (Image Gen)</option>
+                    </optgroup>
+                    <optgroup label="Others (7 models)">
                         <option value="yi-large">yi-large</option>
                         <option value="yi-34b">yi-34b</option>
                         <option value="phi-3-medium">phi-3-medium</option>
@@ -698,6 +701,7 @@
                 <div class="input-controls">
                     <button class="secondary" onclick="toggleFileBuilder()">📁 Build File</button>
                     <button class="secondary" onclick="document.getElementById('fileInput').click()">📎 Upload File</button>
+                    <button class="secondary" onclick="quickGenerateImage()" style="background: #d73a4a;">🎨 Generate Image</button>
                     <button class="secondary" onclick="toggleModelSelector()" style="background: #6e40c9;">⚡ Select Models</button>
                     <button onclick="startChain()" id="chainBtn" style="background: #f0883e;">🔗 Chain</button>
                     <button onclick="startSuperchain()" id="superchainBtn" style="background: #6e40c9;">⚡ Superchain</button>
@@ -795,6 +799,9 @@
             'gemini-1.0-pro': 8000,       // Increased
             'deepseek-v2': 8000,          // Increased
             'deepseek-coder': 8000,       // Increased
+            
+            // Image generation model
+            'stable-diffusion-xl-comfy': 77,  // SD uses 77 token context for prompts
             
             'default': 8000  // Increased default for better responses
         };
@@ -1139,6 +1146,20 @@ RESPONSE REQUIREMENTS:
                     if (orchestrationEnabled && data.model) {
                         displayContent = `[Model: ${data.model}]\n\n${data.content}`;
                     }
+                    
+                    // Check if this is an image generation response
+                    if (currentModel === 'stable-diffusion-xl-comfy' || data.content.includes('data:image')) {
+                        // Extract image data URL if present
+                        const imageUrlMatch = data.content.match(/(data:image\/[^;]+;base64,[^\s"']+)/);
+                        if (imageUrlMatch) {
+                            const imageUrl = imageUrlMatch[1];
+                            displayContent = `🎨 **Image Generated:**\n\n<img src="${imageUrl}" class="message-image" onclick="downloadGeneratedImage('${imageUrl}')" title="Click to download" style="max-width: 512px; border-radius: 8px; cursor: pointer;" />`;
+                        } else {
+                            // If no image URL found, show the text response
+                            displayContent = `🎨 **Image Generation Result:**\n\n${data.content}`;
+                        }
+                    }
+                    
                     addMessage('assistant', displayContent);
                     
                     // Clear uploaded files after successful send
@@ -1657,6 +1678,81 @@ RESPONSE REQUIREMENTS:
             document.getElementById('autopilotBtn').disabled = false;
             document.getElementById('autopilotBtn').textContent = '🚀 Autopilot';
             document.getElementById('autopilotBtn').style.background = '#238636';
+        }
+        
+        // Download generated image
+        function downloadGeneratedImage(imageUrl) {
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = `generated-image-${Date.now()}.png`;
+            link.click();
+            addMessage('system', '✅ Image downloaded!');
+        }
+        
+        // Quick generate image - switches to SD and prompts for description
+        async function quickGenerateImage() {
+            const input = document.getElementById('messageInput');
+            let prompt = input.value.trim();
+            
+            if (!prompt) {
+                prompt = window.prompt('🎨 Enter image description:', 'A beautiful sunset over mountains');
+                if (!prompt) return;
+            }
+            
+            // Switch to Stable Diffusion
+            const previousModel = currentModel;
+            currentModel = 'stable-diffusion-xl-comfy';
+            document.getElementById('modelSelect').value = 'stable-diffusion-xl-comfy';
+            
+            addMessage('system', `🎨 Switching to Stable Diffusion XL for image generation...`);
+            addMessage('user', prompt);
+            input.value = '';
+            
+            try {
+                const messages = [{
+                    role: 'user',
+                    content: prompt
+                }];
+                
+                const response = await fetch('/api/chat/forge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'stable-diffusion-xl-comfy',
+                        messages: messages,
+                        max_tokens: 77,
+                        useAdmin: adminOverride
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.content) {
+                    // Check if response contains image data
+                    if (data.content.includes('data:image') || data.content.includes('http')) {
+                        const imageUrlMatch = data.content.match(/(data:image\/[^;]+;base64,[^\s"']+|https?:\/\/[^\s"']+\.(png|jpg|jpeg|gif|webp))/);
+                        if (imageUrlMatch) {
+                            const imageUrl = imageUrlMatch[1];
+                            addMessage('assistant', `🎨 **Image Generated Successfully!**\n\n<img src="${imageUrl}" class="message-image" onclick="downloadGeneratedImage('${imageUrl}')" title="Click to download" style="max-width: 512px; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3);" />`);
+                        } else {
+                            addMessage('assistant', data.content);
+                        }
+                    } else {
+                        addMessage('assistant', `🎨 ${data.content}`);
+                    }
+                } else {
+                    addMessage('error', data.error || 'Image generation failed');
+                }
+            } catch (error) {
+                addMessage('error', `Image generation error: ${error.message}`);
+            }
+            
+            // Switch back to previous model
+            setTimeout(() => {
+                currentModel = previousModel;
+                document.getElementById('modelSelect').value = previousModel;
+                addMessage('system', `🔄 Switched back to ${previousModel}`);
+            }, 1000);
         }
         
     
