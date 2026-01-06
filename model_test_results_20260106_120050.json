@@ -1,0 +1,257 @@
+{
+  "timestamp": "2026-01-06T12:00:50.580375",
+  "api_url": "https://forge.manus.ai/v1/chat/completions",
+  "total_models": 31,
+  "successful": 0,
+  "failed": 31,
+  "results": [
+    {
+      "model": "gpt-4.1-mini",
+      "status": "error",
+      "latency_ms": 671.21,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "gpt-4.1-nano",
+      "status": "error",
+      "latency_ms": 666.85,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "gpt-4o",
+      "status": "error",
+      "latency_ms": 673.07,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "gpt-4o-mini",
+      "status": "error",
+      "latency_ms": 667.14,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "gpt-4-turbo",
+      "status": "error",
+      "latency_ms": 670.06,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "gpt-3.5-turbo",
+      "status": "error",
+      "latency_ms": 222.95,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "o1-mini",
+      "status": "error",
+      "latency_ms": 221.64,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "gemini-2.5-flash",
+      "status": "error",
+      "latency_ms": 221.7,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "gemini-2.5-pro",
+      "status": "error",
+      "latency_ms": 222.14,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "gemini-1.5-pro",
+      "status": "error",
+      "latency_ms": 222.61,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "gemini-1.5-flash",
+      "status": "error",
+      "latency_ms": 224.36,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "claude-3.5-sonnet",
+      "status": "error",
+      "latency_ms": 222.02,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "claude-3-opus",
+      "status": "error",
+      "latency_ms": 221.74,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "claude-3-sonnet",
+      "status": "error",
+      "latency_ms": 225.51,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "claude-3-haiku",
+      "status": "error",
+      "latency_ms": 223.43,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "llama-3.3-70b",
+      "status": "error",
+      "latency_ms": 223.5,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "llama-3.1-405b",
+      "status": "error",
+      "latency_ms": 225.41,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "llama-3.1-70b",
+      "status": "error",
+      "latency_ms": 238.74,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "llama-3.1-8b",
+      "status": "error",
+      "latency_ms": 220.99,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "mistral-large",
+      "status": "error",
+      "latency_ms": 219.17,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "mistral-small",
+      "status": "error",
+      "latency_ms": 221.21,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "mixtral-8x7b",
+      "status": "error",
+      "latency_ms": 221.0,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "mixtral-8x22b",
+      "status": "error",
+      "latency_ms": 223.12,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "codestral",
+      "status": "error",
+      "latency_ms": 223.45,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "deepseek-v3",
+      "status": "error",
+      "latency_ms": 223.03,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "deepseek-v2.5",
+      "status": "error",
+      "latency_ms": 239.9,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "deepseek-coder",
+      "status": "error",
+      "latency_ms": 227.45,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "grok-2",
+      "status": "error",
+      "latency_ms": 226.98,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "command-r-plus",
+      "status": "error",
+      "latency_ms": 227.01,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "command-r",
+      "status": "error",
+      "latency_ms": 225.79,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    },
+    {
+      "model": "qwen-2.5-72b",
+      "status": "error",
+      "latency_ms": 223.79,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 401: {\"code\":16,\"message\":\"there's an issue with your API key\"}"
+    }
+  ]
+}

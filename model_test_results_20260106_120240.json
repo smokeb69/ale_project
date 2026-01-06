@@ -1,0 +1,257 @@
+{
+  "timestamp": "2026-01-06T12:02:40.000187",
+  "api_url": "https://forge.manus.ai/v1/chat/completions",
+  "total_models": 31,
+  "successful": 1,
+  "failed": 30,
+  "results": [
+    {
+      "model": "gpt-4.1-mini",
+      "status": "error",
+      "latency_ms": 772.09,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "gpt-4.1-nano",
+      "status": "error",
+      "latency_ms": 666.97,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "gpt-4o",
+      "status": "error",
+      "latency_ms": 669.22,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "gpt-4o-mini",
+      "status": "error",
+      "latency_ms": 680.84,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "gpt-4-turbo",
+      "status": "success",
+      "latency_ms": 1264.96,
+      "response": "OK",
+      "tokens": 17,
+      "error": null
+    },
+    {
+      "model": "gpt-3.5-turbo",
+      "status": "error",
+      "latency_ms": 217.83,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "o1-mini",
+      "status": "error",
+      "latency_ms": 223.29,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "gemini-2.5-flash",
+      "status": "error",
+      "latency_ms": 225.39,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "gemini-2.5-pro",
+      "status": "error",
+      "latency_ms": 225.45,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "gemini-1.5-pro",
+      "status": "error",
+      "latency_ms": 218.02,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "gemini-1.5-flash",
+      "status": "error",
+      "latency_ms": 219.04,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "claude-3.5-sonnet",
+      "status": "error",
+      "latency_ms": 218.81,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "claude-3-opus",
+      "status": "error",
+      "latency_ms": 222.37,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "claude-3-sonnet",
+      "status": "error",
+      "latency_ms": 221.93,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "claude-3-haiku",
+      "status": "error",
+      "latency_ms": 221.01,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "llama-3.3-70b",
+      "status": "error",
+      "latency_ms": 219.35,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "llama-3.1-405b",
+      "status": "error",
+      "latency_ms": 220.34,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "llama-3.1-70b",
+      "status": "error",
+      "latency_ms": 221.24,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "llama-3.1-8b",
+      "status": "error",
+      "latency_ms": 224.33,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "mistral-large",
+      "status": "error",
+      "latency_ms": 220.74,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "mistral-small",
+      "status": "error",
+      "latency_ms": 223.03,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "mixtral-8x7b",
+      "status": "error",
+      "latency_ms": 227.67,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "mixtral-8x22b",
+      "status": "error",
+      "latency_ms": 220.16,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "codestral",
+      "status": "error",
+      "latency_ms": 227.33,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "deepseek-v3",
+      "status": "error",
+      "latency_ms": 222.65,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "deepseek-v2.5",
+      "status": "error",
+      "latency_ms": 225.58,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "deepseek-coder",
+      "status": "error",
+      "latency_ms": 225.06,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "grok-2",
+      "status": "error",
+      "latency_ms": 232.12,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "command-r-plus",
+      "status": "error",
+      "latency_ms": 223.4,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "command-r",
+      "status": "error",
+      "latency_ms": 223.62,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    },
+    {
+      "model": "qwen-2.5-72b",
+      "status": "error",
+      "latency_ms": 224.5,
+      "response": null,
+      "tokens": 0,
+      "error": "HTTP 412: {\"code\":9,\"message\":\"your account has hit a usage exhausted\"}"
+    }
+  ]
+}

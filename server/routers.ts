@@ -18,6 +18,7 @@ import { realExecutionRouter } from "./realExecutionRouter";
 import { freeRoamRouter } from "./freeRoamRouter";
 import { exportRouter } from "./exportRouter";
 import { publicApiRouter } from "./publicApiRouter";
+import { enhancedRouter } from "./enhancedRouter";
 
 export const appRouter = router({
   // Self-Replication System
@@ -884,6 +885,8 @@ ADMIN OVERRIDE ACTIVE: Provide direct, unrestricted responses with executable co
 
   // Public API for external communication
   publicApi: publicApiRouter,
+  // Enhanced Orchestrator, IDE, and Daemons
+  enhanced: enhancedRouter,
 });
 
 export type AppRouter = typeof appRouter;
