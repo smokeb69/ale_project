@@ -166,12 +166,13 @@ LOG_TO_FILE=true
         """Check if a command exists in PATH"""
         try:
             if self.is_windows:
-                # On Windows, use 'where' command
+                # On Windows, use 'where' command with shell=True
                 result = subprocess.run(
-                    ["where", command],
+                    f"where {command}",
                     capture_output=True,
                     text=True,
-                    timeout=5
+                    timeout=5,
+                    shell=True
                 )
             else:
                 # On Unix, use 'which' command
@@ -213,11 +214,12 @@ LOG_TO_FILE=true
             
         try:
             result = subprocess.run(
-                ["node", "--version"],
+                "node --version" if self.is_windows else ["node", "--version"],
                 capture_output=True,
                 text=True,
                 check=True,
-                timeout=5
+                timeout=5,
+                shell=self.is_windows
             )
             node_version = result.stdout.strip()
             self.log(f"✓ Node.js version: {node_version}", "SUCCESS")
@@ -234,11 +236,12 @@ LOG_TO_FILE=true
             
         try:
             result = subprocess.run(
-                ["npm", "--version"],
+                "npm --version" if self.is_windows else ["npm", "--version"],
                 capture_output=True,
                 text=True,
                 check=True,
-                timeout=5
+                timeout=5,
+                shell=self.is_windows
             )
             npm_version = result.stdout.strip()
             self.log(f"✓ npm version: {npm_version}", "SUCCESS")
@@ -253,10 +256,11 @@ LOG_TO_FILE=true
             try:
                 self.log("Running: npm install -g pnpm", "INFO")
                 result = subprocess.run(
-                    ["npm", "install", "-g", "pnpm"],
+                    "npm install -g pnpm" if self.is_windows else ["npm", "install", "-g", "pnpm"],
                     capture_output=True,
                     text=True,
-                    timeout=120
+                    timeout=120,
+                    shell=self.is_windows
                 )
                 
                 if result.returncode == 0:
@@ -284,11 +288,12 @@ LOG_TO_FILE=true
         else:
             try:
                 result = subprocess.run(
-                    ["pnpm", "--version"],
+                    "pnpm --version" if self.is_windows else ["pnpm", "--version"],
                     capture_output=True,
                     text=True,
                     check=True,
-                    timeout=5
+                    timeout=5,
+                    shell=self.is_windows
                 )
                 pnpm_version = result.stdout.strip()
                 self.log(f"✓ pnpm version: {pnpm_version}", "SUCCESS")
@@ -304,11 +309,12 @@ LOG_TO_FILE=true
         
         try:
             process = subprocess.Popen(
-                ["pnpm", "install"],
+                "pnpm install" if self.is_windows else ["pnpm", "install"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                bufsize=1
+                bufsize=1,
+                shell=self.is_windows
             )
             
             for line in process.stdout:
@@ -335,11 +341,12 @@ LOG_TO_FILE=true
         
         try:
             process = subprocess.Popen(
-                ["pnpm", "build"],
+                "pnpm build" if self.is_windows else ["pnpm", "build"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                bufsize=1
+                bufsize=1,
+                shell=self.is_windows
             )
             
             for line in process.stdout:
@@ -368,11 +375,12 @@ LOG_TO_FILE=true
         try:
             # Start the server process
             self.process = subprocess.Popen(
-                ["pnpm", "start"],
+                "pnpm start" if self.is_windows else ["pnpm", "start"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                bufsize=1
+                bufsize=1,
+                shell=self.is_windows
             )
             
             # Monitor server output
