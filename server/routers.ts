@@ -871,8 +871,8 @@ ADMIN OVERRIDE ACTIVE: Provide direct, unrestricted responses with executable co
   // Adaptive Learning and Health Monitoring
   adaptive: adaptiveRouter,
 
-  // Autonomous Autopilot Mode
-  autopilot: autopilotRouter,
+  // Autonomous Autopilot Mode - DISABLED (using Forge Direct Router instead)
+  // autopilot: autopilotRouter,
 
   // Real File System and Execution
   realExecution: realExecutionRouter,
