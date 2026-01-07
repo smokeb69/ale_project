@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALE Free-Roam Autonomous Agent Dashboard</title>
+    <title>ALE Forge Direct Router Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -39,6 +39,18 @@
             font-size: 2.5em;
             margin-bottom: 10px;
             text-shadow: 0 0 20px rgba(88, 166, 255, 0.3);
+        }
+
+        .routing-badge {
+            display: inline-block;
+            background: #238636;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            border: 1px solid #3fb950;
         }
 
         .status-bar {
@@ -238,6 +250,10 @@
             color: #58a6ff;
         }
 
+        .log-line.warning {
+            color: #d29922;
+        }
+
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -259,8 +275,9 @@
 <body>
     <div class="container">
         <header>
-            <h1>🤖 ALE Free-Roam Autonomous Agent</h1>
-            <p>Real-time autonomous exploration with Forge admin routing (NO MANUS LLM COSTS)</p>
+            <h1>🤖 ALE Forge Direct Router</h1>
+            <div class="routing-badge">🔥 FORGE ADMIN ROUTING - NO TRPC - NO MANUS LLM COSTS</div>
+            <p>Real-time autonomous exploration with direct Forge routing</p>
             
             <div class="status-bar">
                 <div class="status-item running">
@@ -293,7 +310,7 @@
         </header>
 
         <div class="message-box">
-            <input type="text" id="messageInput" placeholder="Send message to ALE..." />
+            <input type="text" id="messageInput" placeholder="Send message to ALE via Forge..." />
             <button onclick="sendMessage()">Send</button>
         </div>
 
@@ -312,7 +329,7 @@
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="stat-learnings">0</div>
-                <div class="stat-label">Learnings</div>
+                <div class="stat-label">Forge Learnings</div>
             </div>
         </div>
 
@@ -332,7 +349,7 @@
             </div>
 
             <div class="panel">
-                <h2>🧠 AI Learnings</h2>
+                <h2>🧠 Forge AI Learnings</h2>
                 <div class="panel-content" id="learnings-panel">
                     <p style="color: #8b949e;">Loading...</p>
                 </div>
@@ -341,8 +358,9 @@
             <div class="panel">
                 <h2>📡 Live Feed</h2>
                 <div class="live-feed" id="live-feed">
-                    <div class="log-line info">🚀 ALE Agent initialized</div>
+                    <div class="log-line info">🚀 ALE Forge Direct Router initialized</div>
                     <div class="log-line info">⏳ Waiting for autonomous loops...</div>
+                    <div class="log-line success">✅ Using Forge Admin Routing (NO TRPC)</div>
                 </div>
             </div>
         </div>
@@ -358,6 +376,7 @@
                 return await response.json();
             } catch (error) {
                 console.error(`API Error: ${error.message}`);
+                addLog(`❌ API Error: ${error.message}`, 'error');
                 return null;
             }
         }
@@ -372,6 +391,7 @@
                 return await response.json();
             } catch (error) {
                 console.error(`API Error: ${error.message}`);
+                addLog(`❌ API Error: ${error.message}`, 'error');
                 return null;
             }
         }
@@ -461,11 +481,11 @@
             const message = document.getElementById('messageInput').value;
             if (!message) return;
 
-            addLog(`📤 Sending: ${message}`, 'info');
+            addLog(`📤 Sending via Forge: ${message}`, 'info');
             const response = await postAPI('/api/ale/message', { message });
             
             if (response && response.success) {
-                addLog(`📥 Response: ${response.aleResponse.substring(0, 100)}...`, 'success');
+                addLog(`📥 Forge Response: ${response.aleResponse.substring(0, 100)}...`, 'success');
             } else {
                 addLog(`❌ Error: ${response?.error || 'Unknown error'}`, 'error');
             }
@@ -490,6 +510,8 @@
         document.getElementById('messageInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
+
+        addLog('🔥 Dashboard loaded - Forge Direct Routing active', 'success');
     </script>
 </body>
 </html>
