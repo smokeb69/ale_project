@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https: data:;">
+  <title>KIMI SWARM 5000 MAXIMUM</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/editor/editor.main.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --bg: #020408;
+      --bg-panel: #0a0f1a;
+      --bg-card: #0f141f;
+      --border: #1a2332;
+      --text: #e7eeff;
+      --text-muted: #6b7280;
+      --cyan: #00d4ff;
+      --violet: #8b5cf6;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --red: #ef4444;
+    }
+    
+    body {
+      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Title Bar */
+    .title-bar {
+      height: 38px;
+      background: linear-gradient(90deg, var(--bg-panel), #0f1720);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 15px;
+      -webkit-app-region: drag;
+    }
+    
+    .title-bar .title {
+      font-size: 13px;
+      font-weight: 600;
+      background: linear-gradient(90deg, var(--cyan), var(--violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .window-controls {
+      display: flex;
+      gap: 8px;
+      -webkit-app-region: no-drag;
+    }
+    
+    .window-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+    }
+    
+    .window-btn.close { background: var(--red); }
+    .window-btn.minimize { background: var(--amber); }
+    .window-btn.maximize { background: var(--emerald); }
+    
+    /* Toolbar */
+    .toolbar {
+      height: 45px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      gap: 5px;
+      overflow-x: auto;
+    }
+    
+    .toolbar-btn {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    
+    .toolbar-btn:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: var(--cyan);
+    }
+    
+    .toolbar-btn.primary {
+      background: linear-gradient(135deg, var(--cyan), var(--violet));
+      border: none;
+      font-weight: 600;
+    }
+    
+    /* Main Layout */
+    .main-container {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 250px 1fr 300px;
+      overflow: hidden;
+    }
+    
+    /* Left Panel - Agents & Files */
+    .left-panel {
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .panel-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .panel-tab {
+      flex: 1;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 10px;
+      text-transform: uppercase;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+    
+    .panel-tab.active {
+      color: var(--cyan);
+      border-bottom: 2px solid var(--cyan);
+    }
+    
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+    
+    .agent-item {
+      padding: 10px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .agent-item:hover {
+      border-color: var(--cyan);
+      transform: translateX(3px);
+    }
+    
+    .agent-item.kimi {
+      border-color: var(--violet);
+      background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(0,212,255,0.05));
+    }
+    
+    .agent-name {
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .agent-role {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    
+    .agent-status {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-left: auto;
+    }
+    
+    .agent-status.active { background: var(--emerald); box-shadow: 0 0 6px var(--emerald); }
+    .agent-status.busy { background: var(--amber); animation: pulse 1.5s infinite; }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    
+    /* Center - Editor & Terminal */
+    .center-panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .editor-container {
+      flex: 2;
+      min-height: 0;
+      position: relative;
+    }
+    
+    #monaco-editor {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .terminal-container {
+      flex: 1;
+      min-height: 200px;
+      background: #000;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .terminal-tabs {
+      display: flex;
+      background: var(--bg-panel);
+      padding: 5px 10px;
+      gap: 5px;
+    }
+    
+    .terminal-tab {
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .terminal-tab.active {
+      background: rgba(0,212,255,0.1);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+    
+    .terminal-new {
+      padding: 6px 10px;
+      background: transparent;
+      border: 1px dashed var(--border);
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    #terminal {
+      flex: 1;
+      padding: 5px;
+    }
+    
+    /* Right Panel - AI & Stats */
+    .right-panel {
+      background: var(--bg-panel);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .ai-chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .ai-header {
+      padding: 15px;
+      background: linear-gradient(135deg, var(--violet), rgba(0,212,255,0.3));
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .ai-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--violet), var(--cyan));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    
+    .ai-info h3 {
+      font-size: 14px;
+      margin: 0;
+    }
+    
+    .ai-info p {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin: 2px 0 0 0;
+    }
+    
+    .ai-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+    }
+    
+    .ai-message {
+      margin-bottom: 12px;
+      padding: 12px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    
+    .ai-message.user {
+      background: rgba(0,212,255,0.1);
+      border-left: 3px solid var(--cyan);
+    }
+    
+    .ai-message.kimi {
+      background: rgba(139,92,246,0.1);
+      border-left: 3px solid var(--violet);
+    }
+    
+    .ai-input-area {
+      padding: 15px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .ai-input {
+      width: 100%;
+      padding: 12px;
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      resize: none;
+    }
+    
+    .ai-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    
+    .ai-btn {
+      flex: 1;
+      padding: 10px;
+      background: linear-gradient(135deg, var(--violet), var(--cyan));
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .stats-panel {
+      padding: 15px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .stats-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 11px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .stat-value {
+      color: var(--cyan);
+      font-weight: 600;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #2a3a50; }
+  </style>
+</head>
+<body>
+  <!-- Title Bar -->
+  <div class="title-bar">
+    <div class="title">
+      <span>🐝</span>
+      <span>KIMI SWARM 5000 MAXIMUM</span>
+    </div>
+    <div class="window-controls">
+      <button class="window-btn minimize" onclick="minimizeWindow()"></button>
+      <button class="window-btn maximize" onclick="maximizeWindow()"></button>
+      <button class="window-btn close" onclick="closeWindow()"></button>
+    </div>
+  </div>
+  
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button class="toolbar-btn primary" onclick="newFile()">
+      <span>📄</span> New File
+    </button>
+    <button class="toolbar-btn" onclick="openFile()">
+      <span>📂</span> Open
+    </button>
+    <button class="toolbar-btn" onclick="saveFile()">
+      <span>💾</span> Save
+    </button>
+    <div style="width: 1px; height: 20px; background: var(--border); margin: 0 5px;"></div>
+    <button class="toolbar-btn" onclick="runCode()">
+      <span>▶️</span> Run
+    </button>
+    <button class="toolbar-btn" onclick="runInDocker()">
+      <span>🐳</span> Docker Run
+    </button>
+    <div style="width: 1px; height: 20px; background: var(--border); margin: 0 5px;"></div>
+    <button class="toolbar-btn" onclick="analyzeCode()">
+      <span>🔍</span> AI Analyze
+    </button>
+    <button class="toolbar-btn" onclick="generateExploit()">
+      <span>⚡</span> Generate Exploit
+    </button>
+    <div style="width: 1px; height: 20px; background: var(--border); margin: 0 5px;"></div>
+    <button class="toolbar-btn" onclick="newTerminal()">
+      <span>⌨️</span> New Terminal
+    </button>
+    <button class="toolbar-btn" onclick="newWindow()">
+      <span>🪟</span> New Window
+    </button>
+  </div>
+  
+  <!-- Main Container -->
+  <div class="main-container">
+    <!-- Left Panel -->
+    <div class="left-panel">
+      <div class="panel-tabs">
+        <button class="panel-tab active" onclick="switchPanel('agents')">Agents</button>
+        <button class="panel-tab" onclick="switchPanel('files')">Files</button>
+      </div>
+      <div class="panel-content" id="left-panel-content">
+        <!-- Agents will be loaded here -->
+      </div>
+    </div>
+    
+    <!-- Center Panel -->
+    <div class="center-panel">
+      <div class="editor-container">
+        <div id="monaco-editor"></div>
+      </div>
+      <div class="terminal-container">
+        <div class="terminal-tabs">
+          <div class="terminal-tab active">
+            <span>Terminal 1</span>
+            <span style="margin-left: 5px; color: var(--red); cursor: pointer;">×</span>
+          </div>
+          <button class="terminal-new" onclick="newTerminal()">+</button>
+        </div>
+        <div id="terminal"></div>
+      </div>
+    </div>
+    
+    <!-- Right Panel -->
+    <div class="right-panel">
+      <div class="ai-chat">
+        <div class="ai-header">
+          <div class="ai-avatar">🤖</div>
+          <div class="ai-info">
+            <h3>Kimi Maximum</h3>
+            <p>AI Core v5000 • Active</p>
+          </div>
+        </div>
+        <div class="ai-messages" id="ai-messages">
+          <div class="ai-message kimi">
+            Greetings. I am Kimi Maximum, the AI core of this native swarm. I have access to the file system, real terminals, and Docker sandboxes. How may I assist you?
+          </div>
+        </div>
+        <div class="ai-input-area">
+          <textarea class="ai-input" id="ai-input" rows="3" placeholder="Ask Kimi anything..."></textarea>
+          <div class="ai-actions">
+            <button class="ai-btn" onclick="askKimi()">Send Message</button>
+            <button class="ai-btn" onclick="generateCode()">Generate Code</button>
+          </div>
+        </div>
+      </div>
+      <div class="stats-panel">
+        <div class="stats-title">Swarm Statistics</div>
+        <div class="stat-item">
+          <span>Active Agents</span>
+          <span class="stat-value" id="stat-agents">1</span>
+        </div>
+        <div class="stat-item">
+          <span>Terminals</span>
+          <span class="stat-value" id="stat-terminals">1</span>
+        </div>
+        <div class="stat-item">
+          <span>Files Created</span>
+          <span class="stat-value" id="stat-files">0</span>
+        </div>
+        <div class="stat-item">
+          <span>Commands Run</span>
+          <span class="stat-value" id="stat-commands">0</span>
+        </div>
+        <div class="stat-item">
+          <span>Docker Containers</span>
+          <span class="stat-value" id="stat-docker">0</span>
+        </div>
+        <div class="stat-item">
+          <span>AI Messages</span>
+          <span class="stat-value" id="stat-ai">1</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+  <script>
+    // Electron IPC
+    const { ipcRenderer } = require('electron');
+    
+    // Global state
+    let editor;
+    let terminal;
+    let fitAddon;
+    let currentFile = null;
+    
+    // Initialize Monaco Editor
+    require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' }});
+    require(['vs/editor/editor.main'], function() {
+      editor = monaco.editor.create(document.getElementById('monaco-editor'), {
+        value: '// Welcome to KIMI SWARM 5000 MAXIMUM\n// Native Desktop Edition\n\nfunction initializeSwarm() {\n  console.log("🐝 Swarm intelligence activated");\n  return {\n    power: "MAXIMUM",\n    status: "OPERATIONAL"\n  };\n}\n\ninitializeSwarm();',
+        language: 'javascript',
+        theme: 'vs-dark',
+        fontSize: 14,
+        fontFamily: 'JetBrains Mono, Consolas, monospace',
+        minimap: { enabled: true },
+        automaticLayout: true,
+        scrollBeyondLastLine: false,
+        roundedSelection: false,
+        padding: { top: 16 }
+      });
+    });
+    
+    // Initialize Terminal
+    function initTerminal() {
+      terminal = new Terminal({
+        cursorBlink: true,
+        fontSize: 13,
+        fontFamily: 'JetBrains Mono, Consolas, monospace',
+        theme: {
+          background: '#000',
+          foreground: '#e7eeff',
+          cursor: '#00d4ff',
+          selection: '#00d4ff33',
+          black: '#000',
+          red: '#ef4444',
+          green: '#10b981',
+          yellow: '#f59e0b',
+          blue: '#3b82f6',
+          magenta: '#8b5cf6',
+          cyan: '#00d4ff',
+          white: '#e7eeff'
+        }
+      });
+      
+      fitAddon = new FitAddon.FitAddon();
+      terminal.loadAddon(fitAddon);
+      
+      terminal.open(document.getElementById('terminal'));
+      fitAddon.fit();
+      
+      terminal.writeln('\x1b[36m╔══════════════════════════════════════════════════════════╗\x1b[0m');
+      terminal.writeln('\x1b[36m║\x1b[0m  🐝 KIMI SWARM 5000 MAXIMUM - Native Terminal 🐝      \x1b[36m║\x1b[0m');
+      terminal.writeln('\x1b[36m║\x1b[0m                                                          \x1b[36m║\x1b[0m');
+      terminal.writeln('\x1b[36m║\x1b[0m  Type commands to interact with the swarm              \x1b[36m║\x1b[0m');
+      terminal.writeln('\x1b[36m╚══════════════════════════════════════════════════════════╝\x1b[0m\r\n');
+      
+      // Create real PTY via IPC
+      ipcRenderer.invoke('terminal:create', {}).then(result => {
+        terminal.writeln(`\x1b[32m[Terminal created] PID: ${result.pid}\x1b[0m\r\n`);
+        
+        // Handle terminal data
+        ipcRenderer.on(`terminal-data-${result.id}`, (event, data) => {
+          terminal.write(data);
+        });
+        
+        // Send input to PTY
+        terminal.onData(data => {
+          ipcRenderer.invoke('terminal:write', result.id, data);
+        });
+        
+        // Handle resize
+        window.addEventListener('resize', () => {
+          fitAddon.fit();
+          ipcRenderer.invoke('terminal:resize', result.id, terminal.cols, terminal.rows);
+        });
+      });
+    }
+    
+    initTerminal();
+    
+    // Load agents
+    async function loadAgents() {
+      const agents = await ipcRenderer.invoke('swarm:getAgents');
+      const container = document.getElementById('left-panel-content');
+      
+      container.innerHTML = agents.map(agent => `
+        <div class="agent-item ${agent.id === 'KIMI-CORE-v5000' ? 'kimi' : ''}">
+          <div class="agent-name">
+            ${agent.name}
+            <span class="agent-status ${agent.status === 'ACTIVE' ? 'active' : 'busy'}"></span>
+          </div>
+          <div class="agent-role">${agent.role}</div>
+        </div>
+      `).join('');
+      
+      document.getElementById('stat-agents').textContent = agents.length;
+    }
+    
+    loadAgents();
+    
+    // Update stats periodically
+    setInterval(async () => {
+      const stats = await ipcRenderer.invoke('swarm:getStats');
+      document.getElementById('stat-terminals').textContent = stats.terminals;
+      document.getElementById('stat-files').textContent = stats.filesCreated;
+      document.getElementById('stat-commands').textContent = stats.commandsExecuted;
+      document.getElementById('stat-docker').textContent = stats.docker;
+      document.getElementById('stat-ai').textContent = stats.aiMessages;
+    }, 1000);
+    
+    // Toolbar functions
+    async function newFile() {
+      editor.setValue('// New file\n');
+      currentFile = null;
+    }
+    
+    async function openFile() {
+      const paths = await ipcRenderer.invoke('dialog:openFile');
+      if (paths && paths.length > 0) {
+        const content = await ipcRenderer.invoke('fs:readFile', paths[0]);
+        editor.setValue(content);
+        currentFile = paths[0];
+      }
+    }
+    
+    async function saveFile() {
+      if (!currentFile) {
+        currentFile = await ipcRenderer.invoke('dialog:saveFile');
+      }
+      if (currentFile) {
+        await ipcRenderer.invoke('fs:writeFile', currentFile, editor.getValue());
+        terminal.writeln(`\x1b[32m[Saved] ${currentFile}\x1b[0m\r\n`);
+      }
+    }
+    
+    async function runCode() {
+      terminal.writeln('\x1b[33m[Running code...]\x1b[0m\r\n');
+      // Code execution logic here
+    }
+    
+    async function runInDocker() {
+      terminal.writeln('\x1b[36m[Creating Docker sandbox...]\x1b[0m\r\n');
+      const result = await ipcRenderer.invoke('docker:create', 'sandbox-' + Date.now());
+      terminal.writeln(`\x1b[32m[Docker container created] ${result.id}\x1b[0m\r\n`);
+    }
+    
+    async function analyzeCode() {
+      const code = editor.getValue();
+      addAIMessage('user', 'Analyze this code:\n```\n' + code.substring(0, 200) + '...\n```');
+      
+      const result = await ipcRenderer.invoke('ai:analyze', code);
+      addAIMessage('kimi', `Analysis complete. Found ${result.vulnerabilities.length} vulnerabilities:\n` + 
+        result.vulnerabilities.map(v => `- ${v.type} (${v.severity}) at line ${v.line}`).join('\n'));
+    }
+    
+    async function generateExploit() {
+      addAIMessage('user', 'Generate a buffer overflow exploit POC');
+      const result = await ipcRenderer.invoke('ai:generateCode', 'buffer overflow exploit', 'python');
+      addAIMessage('kimi', `Generated exploit code:\n\`\`\`\n${result.code}\n\`\`\``);
+      editor.setValue(result.code);
+    }
+    
+    function newTerminal() {
+      ipcRenderer.invoke('window:create', 'terminal', {});
+    }
+    
+    function newWindow() {
+      ipcRenderer.invoke('window:create', 'main', { maximize: true });
+    }
+    
+    // AI Chat
+    async function askKimi() {
+      const input = document.getElementById('ai-input');
+      const message = input.value.trim();
+      if (!message) return;
+      
+      addAIMessage('user', message);
+      input.value = '';
+      
+      const result = await ipcRenderer.invoke('ai:generate', message);
+      addAIMessage('kimi', result.response);
+    }
+    
+    async function generateCode() {
+      const input = document.getElementById('ai-input');
+      const description = input.value.trim();
+      if (!description) return;
+      
+      addAIMessage('user', 'Generate code: ' + description);
+      input.value = '';
+      
+      const result = await ipcRenderer.invoke('ai:generateCode', description, 'javascript');
+      addAIMessage('kimi', `Generated ${result.language} code:\n\`\`\`\n${result.code}\n\`\`\``);
+      editor.setValue(result.code);
+    }
+    
+    function addAIMessage(type, text) {
+      const container = document.getElementById('ai-messages');
+      const div = document.createElement('div');
+      div.className = `ai-message ${type}`;
+      div.textContent = text;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+    
+    // Window controls
+    function minimizeWindow() {
+      ipcRenderer.invoke('window:minimize');
+    }
+    
+    function maximizeWindow() {
+      ipcRenderer.invoke('window:maximize');
+    }
+    
+    function closeWindow() {
+      window.close();
+    }
+    
+    function switchPanel(panel) {
+      document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      // Panel switching logic
+    }
+    
+    // Enter key in AI input
+    document.getElementById('ai-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        askKimi();
+      }
+    });
+  </script>
+</body>
+</html>

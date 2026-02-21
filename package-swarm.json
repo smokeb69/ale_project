@@ -1,0 +1,52 @@
+{
+  "name": "kimi-swarm-5000-maximum",
+  "version": "5000.0.0-maximum",
+  "description": "KIMI SWARM 5000 MAXIMUM POWER EDITION - Native Desktop Swarm",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "node-pty": "^1.0.0",
+    "ws": "^8.14.2",
+    "express": "^4.18.2",
+    "dockerode": "^4.0.0",
+    "axios": "^1.6.0",
+    "electron-store": "^8.1.0",
+    "uuid": "^9.0.1",
+    "chokidar": "^3.5.3",
+    "tar": "^6.2.0",
+    "yauzl": "^2.10.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.kimiswarm.5000",
+    "productName": "KIMI SWARM 5000 MAXIMUM",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/",
+      "assets/",
+      "node_modules/"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "author": "Kimi Swarm Collective",
+  "license": "MIT"
+}

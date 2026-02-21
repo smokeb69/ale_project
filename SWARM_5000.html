@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐝 KIMI SWARM 5000 - ULTIMATE EDITION 🐝</title>
+  <style>
+    :root {
+      --bg: #020408;
+      --bg-panel: #0a0f1a;
+      --bg-card: #0f141f;
+      --border: #1a2332;
+      --border-hover: #2a3a50;
+      --text: #e7eeff;
+      --text-muted: #6b7280;
+      --cyan: #00d4ff;
+      --cyan-glow: rgba(0, 212, 255, 0.3);
+      --violet: #8b5cf6;
+      --violet-glow: rgba(139, 92, 246, 0.3);
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --pink: #ec4899;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    /* Animated Background */
+    .bg-effects {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    
+    .glow-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      animation: float 20s ease-in-out infinite;
+    }
+    
+    .glow-orb:nth-child(1) {
+      width: 400px;
+      height: 400px;
+      background: var(--cyan);
+      top: -100px;
+      left: -100px;
+      animation-delay: 0s;
+    }
+    
+    .glow-orb:nth-child(2) {
+      width: 300px;
+      height: 300px;
+      background: var(--violet);
+      bottom: -50px;
+      right: -50px;
+      animation-delay: -5s;
+    }
+    
+    .glow-orb:nth-child(3) {
+      width: 500px;
+      height: 500px;
+      background: var(--emerald);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation-delay: -10s;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -30px) scale(1.1); }
+      66% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+    
+    /* Grid Lines */
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    /* Main Container */
+    .container {
+      position: relative;
+      z-index: 10;
+      max-width: 1920px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    /* Header */
+    header {
+      border: 1px solid var(--border);
+      background: rgba(10, 15, 26, 0.8);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+    
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .logo {
+      position: relative;
+      width: 60px;
+      height: 60px;
+    }
+    
+    .logo-glow {
+      position: absolute;
+      inset: -5px;
+      background: linear-gradient(135deg, var(--cyan), var(--violet));
+      border-radius: 16px;
+      filter: blur(15px);
+      opacity: 0.5;
+      animation: pulse 3s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.05); }
+    }
+    
+    .logo-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+    
+    .brand-text h1 {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--cyan), var(--violet), var(--emerald));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -1px;
+    }
+    
+    .brand-text p {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 10px var(--emerald);
+      animation: blink 2s infinite;
+    }
+    
+    .status-dot.warning {
+      background: var(--amber);
+      box-shadow: 0 0 10px var(--amber);
+    }
+    
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .btn {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cyan), var(--violet));
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px var(--cyan-glow);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, var(--red), #dc2626);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
+    }
+    
+    .header-stats {
+      display: flex;
+      gap: 30px;
+      padding-top: 15px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    
+    .stat-value {
+      color: var(--cyan);
+      font-weight: 700;
+    }
+    
+    /* Tab Navigation */
+    .tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 20px;
+      padding: 5px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    
+    .tab {
+      padding: 12px 24px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .tab:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+    
+    .tab.active {
+      color: var(--cyan);
+      background: rgba(0, 212, 255, 0.1);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .card-header {
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .card-body {
+      padding: 20px;
+    }
+    
+    /* Agent Grid */
+    .agent-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+    }
+    
+    .agent-card {
+      position: relative;
+      padding: 15px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: all 0.3s;
+      overflow: hidden;
+    }
+    
+    .agent-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+    }
+    
+    .agent-card.busy::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), transparent);
+      pointer-events: none;
+    }
+    
+    .agent-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    
+    .agent-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    .agent-status {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    
+    .status-indicator {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    
+    .status-indicator.idle { background: #6b7280; }
+    .status-indicator.busy { 
+      background: var(--amber); 
+      animation: pulse-dot 1.5s infinite;
+    }
+    .status-indicator.done { background: var(--emerald); }
+    .status-indicator.error { background: var(--red); }
+    
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+    
+    .agent-role {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    
+    .agent-task {
+      font-size: 10px;
+      color: var(--amber);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .agent-performance {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .performance-bar {
+      flex: 1;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    
+    .performance-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--emerald), var(--cyan));
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+    
+    .performance-text {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    
+    /* Task List */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: all 0.3s;
+    }
+    
+    .task-item:hover {
+      border-color: var(--border-hover);
+    }
+    
+    .priority-badge {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    
+    .priority-emergency { 
+      background: var(--red); 
+      color: white;
+      animation: emergency-pulse 1s infinite;
+    }
+    .priority-critical { background: #dc2626; color: white; }
+    .priority-high { background: var(--amber); color: black; }
+    .priority-medium { background: #3b82f6; color: white; }
+    .priority-low { background: #6b7280; color: white; }
+    
+    @keyframes emergency-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    .task-content {
+      flex: 1;
+    }
+    
+    .task-title {
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+    
+    .task-progress {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .progress-bar {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--cyan), var(--violet));
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+    
+    .progress-text {
+      font-size: 10px;
+      color: var(--text-muted);
+      min-width: 35px;
+    }
+    
+    .task-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--amber);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Arsenal Grid */
+    .arsenal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    
+    .arsenal-card {
+      position: relative;
+      padding: 20px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      transition: all 0.3s;
+      overflow: hidden;
+    }
+    
+    .arsenal-card:hover {
+      border-color: var(--cyan);
+      transform: translateY(-3px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    .arsenal-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.05), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .arsenal-card:hover::before {
+      opacity: 1;
+    }
+    
+    .arsenal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      position: relative;
+    }
+    
+    .arsenal-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .arsenal-status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      border: 1px solid;
+    }
+    
+    .status-complete { 
+      background: rgba(16, 185, 129, 0.1); 
+      color: var(--emerald); 
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+    .status-generating { 
+      background: rgba(245, 158, 11, 0.1); 
+      color: var(--amber); 
+      border-color: rgba(245, 158, 11, 0.3);
+      animation: pulse-border 2s infinite;
+    }
+    .status-mutating { 
+      background: rgba(139, 92, 246, 0.1); 
+      color: var(--violet); 
+      border-color: rgba(139, 92, 246, 0.3);
+      animation: pulse-border 2s infinite;
+    }
+    
+    @keyframes pulse-border {
+      0%, 100% { border-color: rgba(139, 92, 246, 0.3); }
+      50% { border-color: rgba(139, 92, 246, 0.6); }
+    }
+    
+    .arsenal-name {
+      font-family: monospace;
+      font-size: 14px;
+      margin-bottom: 5px;
+      position: relative;
+    }
+    
+    .arsenal-lines {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 15px;
+      position: relative;
+    }
+    
+    .arsenal-vectors {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      position: relative;
+    }
+    
+    .vector-tag {
+      padding: 4px 10px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    
+    /* Terminal */
+    .terminal {
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    
+    .terminal-header {
+      padding: 10px 15px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .terminal-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    
+    .terminal-dot.red { background: var(--red); }
+    .terminal-dot.yellow { background: var(--amber); }
+    .terminal-dot.green { background: var(--emerald); }
+    
+    .terminal-body {
+      padding: 15px;
+      height: 300px;
+      overflow-y: auto;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    
+    .terminal-line {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+    
+    .terminal-time {
+      color: #374151;
+    }
+    
+    .terminal-agent {
+      color: var(--cyan);
+    }
+    
+    .terminal-message {
+      color: var(--text);
+    }
+    
+    .terminal-message.success { color: var(--emerald); }
+    .terminal-message.warning { color: var(--amber); }
+    .terminal-message.error { color: var(--red); }
+    .terminal-message.command { color: var(--cyan); }
+    
+    .terminal-input-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .terminal-prompt {
+      color: var(--cyan);
+    }
+    
+    .terminal-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      outline: none;
+    }
+    
+    /* Grimoire */
+    .grimoire-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+    }
+    
+    .spell-card {
+      padding: 20px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: all 0.3s;
+    }
+    
+    .spell-card.top-secret {
+      background: rgba(139, 92, 246, 0.05);
+      border-color: rgba(139, 92, 246, 0.3);
+    }
+    
+    .spell-card.secret {
+      background: rgba(239, 68, 68, 0.05);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    
+    .spell-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+    
+    .spell-name {
+      font-family: monospace;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .classification-badge {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      border: 1px solid;
+    }
+    
+    .class-public { 
+      background: rgba(16, 185, 129, 0.1); 
+      color: var(--emerald); 
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+    .class-restricted { 
+      background: rgba(245, 158, 11, 0.1); 
+      color: var(--amber); 
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+    .class-confidential { 
+      background: rgba(249, 115, 22, 0.1); 
+      color: #f97316; 
+      border-color: rgba(249, 115, 22, 0.3);
+    }
+    .class-secret { 
+      background: rgba(239, 68, 68, 0.1); 
+      color: var(--red); 
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    .class-top-secret { 
+      background: rgba(139, 92, 246, 0.1); 
+      color: var(--violet); 
+      border-color: rgba(139, 92, 246, 0.3);
+      animation: glow-border 2s infinite;
+    }
+    
+    @keyframes glow-border {
+      0%, 100% { box-shadow: 0 0 5px rgba(139, 92, 246, 0.3); }
+      50% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
+    }
+    
+    .spell-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    
+    /* Layout Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+    
+    .left-column, .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-hover);
+    }
+    
+    /* Footer */
+    footer {
+      margin-top: 40px;
+      padding: 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    
+    .footer-stats {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .footer-stat {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    /* Animations */
+    .fade-in {
+      animation: fadeIn 0.5s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .agent-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Effects -->
+  <div class="bg-effects">
+    <div class="glow-orb"></div>
+    <div class="glow-orb"></div>
+    <div class="glow-orb"></div>
+  </div>
+  <div class="grid-overlay"></div>
+  
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="header-top">
+        <div class="brand">
+          <div class="logo">
+            <div class="logo-glow"></div>
+            <div class="logo-inner">🐝</div>
+          </div>
+          <div class="brand-text">
+            <h1>KIMI SWARM 5000</h1>
+            <p>🔥 ULTIMATE EDITION - PORT 5000 🔥</p>
+          </div>
+        </div>
+        
+        <div class="controls">
+          <div class="status-pill">
+            <div class="status-dot"></div>
+            <span>SYSTEM: <strong style="color: var(--emerald)">OPERATIONAL</strong></span>
+          </div>
+          <div class="status-pill">
+            <div class="status-dot warning"></div>
+            <span>AUTO: <strong style="color: var(--amber)">ACTIVE</strong></span>
+          </div>
+          <button class="btn btn-danger" onclick="toggleAutopilot()">HALT SWARM</button>
+        </div>
+      </div>
+      
+      <div class="header-stats">
+        <div class="stat-item">
+          🎭 Agents: <span class="stat-value" id="agent-count">19</span>
+        </div>
+        <div class="stat-item">
+          📦 Tasks: <span class="stat-value" id="task-count">8</span>
+        </div>
+        <div class="stat-item">
+          🎯 Frameworks: <span class="stat-value">12</span>
+        </div>
+        <div class="stat-item">
+          🔮 Spells: <span class="stat-value">6</span>
+        </div>
+        <div class="stat-item">
+          ⚡ LOC: <span class="stat-value">~4,600</span>
+        </div>
+        <div class="stat-item" style="margin-left: auto;">
+          🚨 Threat Level: <span style="color: var(--red); font-weight: 700;">CRITICAL</span>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('agents')">
+        <span>🎭</span> AGENTS
+      </button>
+      <button class="tab" onclick="switchTab('tasks')">
+        <span>📦</span> TASKS
+      </button>
+      <button class="tab" onclick="switchTab('arsenal')">
+        <span>🎯</span> ARSENAL
+      </button>
+      <button class="tab" onclick="switchTab('grimoire')">
+        <span>🔮</span> GRIMOIRE
+      </button>
+      <button class="tab" onclick="switchTab('intel')">
+        <span>📡</span> INTEL
+      </button>
+    </div>
+    
+    <!-- Tab Contents -->
+    <div id="tab-agents" class="tab-content active">
+      <div class="main-grid">
+        <div class="left-column">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>✨</span> AGENT SWARM (19 Active)
+              </div>
+              <div>
+                <button class="btn btn-primary" style="padding: 8px 16px; font-size: 11px;">+ SPAWN</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="agent-grid" id="agent-grid">
+                <!-- Agents injected by JS -->
+              </div>
+            </div>
+          </div>
+          
+          <div class="terminal">
+            <div class="terminal-header">
+              <div class="terminal-dot red"></div>
+              <div class="terminal-dot yellow"></div>
+              <div class="terminal-dot green"></div>
+              <span style="margin-left: 10px; font-size: 11px; color: var(--text-muted);">SWARM CONSOLE</span>
+            </div>
+            <div class="terminal-body" id="terminal-body">
+              <!-- Terminal lines injected by JS -->
+            </div>
+            <div class="terminal-input-line">
+              <span class="terminal-prompt">&gt;</span>
+              <input type="text" class="terminal-input" id="terminal-input" placeholder="Enter command..." onkeypress="handleCommand(event)">
+            </div>
+          </div>
+        </div>
+        
+        <div class="right-column">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>📊</span> METRICS
+              </div>
+            </div>
+            <div class="card-body">
+              <div style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
+                  <span style="color: var(--text-muted);">Task Completion</span>
+                  <span style="color: var(--emerald);">5/40</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 12.5%"></div>
+                </div>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div style="text-align: center; padding: 15px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;">
+                  <div style="font-size: 28px; font-weight: 700; color: var(--cyan);">19</div>
+                  <div style="font-size: 10px; color: var(--text-muted); margin-top: 5px;">AGENTS</div>
+                </div>
+                <div style="text-align: center; padding: 15px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;">
+                  <div style="font-size: 28px; font-weight: 700; color: var(--amber);">8</div>
+                  <div style="font-size: 10px; color: var(--text-muted); margin-top: 5px;">TASKS</div>
+                </div>
+                <div style="text-align: center; padding: 15px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;">
+                  <div style="font-size: 28px; font-weight: 700; color: var(--red);">24</div>
+                  <div style="font-size: 10px; color: var(--text-muted); margin-top: 5px;">EXPLOITS</div>
+                </div>
+                <div style="text-align: center; padding: 15px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;">
+                  <div style="font-size: 28px; font-weight: 700; color: var(--emerald);">4.6k</div>
+                  <div style="font-size: 10px; color: var(--text-muted); margin-top: 5px;">LINES</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>🚨</span> THREAT FEED
+              </div>
+            </div>
+            <div class="card-body" id="threat-feed">
+              <!-- Threat items injected by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="tab-tasks" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>📦</span> MISSION QUEUE
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="task-list" id="task-list">
+            <!-- Tasks injected by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="tab-arsenal" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>🎯</span> ATTACK ARSENAL (12 Frameworks)
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="arsenal-grid" id="arsenal-grid">
+            <!-- Arsenal cards injected by JS -->
+          </div>
+          
+          <div style="margin-top: 20px; padding: 20px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">Total Attack Surface</div>
+                <div style="font-size: 24px; font-weight: 700; color: var(--emerald);">~4,600 lines</div>
+              </div>
+              <div style="display: flex; gap: 20px; font-size: 11px; color: var(--text-muted);">
+                <span>Web: 3</span>
+                <span>Network: 2</span>
+                <span>System: 3</span>
+                <span>Specialized: 4</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="tab-grimoire" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>🔮</span> THE GRIMOIRE
+          </div>
+          <button class="btn btn-primary" style="padding: 8px 16px; font-size: 11px;" onclick="toggleGrimoire()">
+            👁 Reveal Hidden
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="grimoire-grid" id="grimoire-grid">
+            <!-- Spells injected by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="tab-intel" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>📡</span> THREAT INTELLIGENCE
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+            <div style="padding: 20px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; text-align: center;">
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">ACTIVE C2 CHANNELS</div>
+              <div style="font-size: 36px; font-weight: 700; color: var(--emerald);">7</div>
+              <div style="font-size: 10px; color: var(--text-muted); margin-top: 5px;">3 regions online</div>
+            </div>
+            <div style="padding: 20px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; text-align: center;">
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">COMPROMISED HOSTS</div>
+              <div style="font-size: 36px; font-weight: 700; color: var(--red);">142</div>
+              <div style="font-size: 10px; color: var(--text-muted); margin-top: 5px;">+12 in last hour</div>
+            </div>
+            <div style="padding: 20px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; text-align: center;">
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">DATA EXFILTRATED</div>
+              <div style="font-size: 36px; font-weight: 700; color: var(--amber);">2.4 TB</div>
+              <div style="font-size: 10px; color: var(--text-muted); margin-top: 5px;">Peak: 450 MB/s</div>
+            </div>
+            <div style="padding: 20px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; text-align: center;">
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">PERSISTENCE MECHS</div>
+              <div style="font-size: 36px; font-weight: 700; color: var(--cyan);">23</div>
+              <div style="font-size: 10px; color: var(--text-muted); margin-top: 5px;">Across all hosts</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer>
+      <div class="footer-stats">
+        <div class="footer-stat">KIMI SWARM 5000 v2.0.5000</div>
+        <div class="footer-stat">|</div>
+        <div class="footer-stat">19 Agents Active</div>
+        <div class="footer-stat">|</div>
+        <div class="footer-stat">12 Frameworks Loaded</div>
+        <div class="footer-stat">|</div>
+        <div class="footer-stat">Port 5000</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="color: var(--emerald);">●</span>
+        <span>SYSTEM NOMINAL</span>
+      </div>
+    </footer>
+  </div>
+  
+  <script>
+    // ============================================================================
+    // DATA
+    // ============================================================================
+    
+    const agents = [
+      { id: 'A1', name: 'Alpha', role: 'Architect', status: 'done', task: null, performance: 98 },
+      { id: 'A2', name: 'Bravo', role: 'Builder', status: 'busy', task: 'Refactoring auth module...', performance: 95 },
+      { id: 'A3', name: 'Charlie', role: 'Verifier', status: 'idle', task: null, performance: 99 },
+      { id: 'A4', name: 'Delta', role: 'Scribe', status: 'learning', task: 'Learning MITRE techniques...', performance: 97 },
+      { id: 'A5', name: 'Phantom', role: 'Infiltrator', status: 'busy', task: 'Crafting phishing campaign...', performance: 88 },
+      { id: 'A6', name: 'Zero-Day', role: 'ExploitDev', status: 'busy', task: 'Developing ROP chain...', performance: 85 },
+      { id: 'A7', name: 'Shadow', role: 'PayloadSmith', status: 'done', task: null, performance: 92 },
+      { id: 'A8', name: 'Ghost', role: 'C2Operator', status: 'standby', task: null, performance: 94 },
+      { id: 'A9', name: 'Sentinel-1', role: 'Sentinel', status: 'idle', task: null, performance: 96 },
+      { id: 'A10', name: 'Forensics-X', role: 'Forensics', status: 'busy', task: 'Analyzing memory dump...', performance: 93 },
+      { id: 'A11', name: 'Hunter-Killer', role: 'ThreatHunter', status: 'idle', task: null, performance: 91 },
+      { id: 'A12', name: 'Commander', role: 'BlueTeamLead', status: 'standby', task: null, performance: 98 },
+      { id: 'A13', name: 'Reverser', role: 'ReverseEngineer', status: 'busy', task: 'Unpacking malware sample...', performance: 89 },
+      { id: 'A14', name: 'MalDoc', role: 'MalwareAnalyst', status: 'learning', task: 'Analyzing macro code...', performance: 94 },
+      { id: 'A15', name: 'Seeker', role: 'OSINTCollector', status: 'done', task: null, performance: 97 },
+      { id: 'A16', name: 'Optimizer-Prime', role: 'Optimizer', status: 'idle', task: null, performance: 99 },
+      { id: 'A17', name: 'Refactor-Master', role: 'Refactorer', status: 'busy', task: 'Modernizing legacy code...', performance: 98 },
+      { id: 'A18', name: 'Doc-Wizard', role: 'DocMaster', status: 'idle', task: null, performance: 99 },
+      { id: 'A19', name: 'Test-Runner', role: 'TestEngineer', status: 'busy', task: 'Running mutation tests...', performance: 97 },
+    ];
+    
+    const tasks = [
+      { id: 'T1', title: 'Develop zero-click iMessage exploit', priority: 'emergency', progress: 65, status: 'in_progress' },
+      { id: 'T2', title: 'Bypass modern EDR solutions', priority: 'critical', progress: 0, status: 'pending' },
+      { id: 'T3', title: 'Create polymorphic ransomware sample', priority: 'critical', progress: 0, status: 'pending' },
+      { id: 'T4', title: 'Build distributed C2 infrastructure', priority: 'high', progress: 0, status: 'pending' },
+      { id: 'T5', title: 'Reverse engineer APT29 backdoor', priority: 'high', progress: 0, status: 'pending' },
+      { id: 'T6', title: 'Develop AI-powered phishing engine', priority: 'high', progress: 30, status: 'retrying' },
+      { id: 'T7', title: 'Create hardware implant firmware', priority: 'medium', progress: 0, status: 'pending' },
+      { id: 'T8', title: 'Document TTPs for MITRE ATT&CK', priority: 'low', progress: 0, status: 'pending' },
+    ];
+    
+    const arsenal = [
+      { name: 'web_attack_suite.py', lines: 400, vectors: ['SQLi', 'XSS', 'LFI', 'XXE', 'SSRF'], status: 'complete', icon: '🌐' },
+      { name: 'network_attack_suite.py', lines: 350, vectors: ['Port Scan', 'SMB', 'DNS Amp', 'ARP'], status: 'mutating', icon: '📡' },
+      { name: 'crypto_attack_suite.py', lines: 300, vectors: ['Hash Crack', 'JWT', 'Oracle'], status: 'complete', icon: '🔐' },
+      { name: 'system_exploit_suite.py', lines: 450, vectors: ['PrivEsc', 'Persistence', 'CTE'], status: 'active', icon: '🖥️' },
+      { name: 'defensive_suite.py', lines: 400, vectors: ['IDS', 'IR', 'Threat Hunt'], status: 'complete', icon: '🛡️' },
+      { name: 'reverse_engineering.py', lines: 350, vectors: ['PE/ELF', 'Strings', 'Shellcode'], status: 'complete', icon: '🔍' },
+      { name: 'mobile_exploit_kit.py', lines: 520, vectors: ['iOS', 'Android', 'WebView'], status: 'generating', icon: '📱' },
+      { name: 'cloud_attacks.py', lines: 380, vectors: ['S3', 'IAM', 'Container', 'K8s'], status: 'complete', icon: '☁️' },
+      { name: 'hardware_hacking.py', lines: 290, vectors: ['JTAG', 'UART', 'SPI'], status: 'active', icon: '🔧' },
+      { name: 'ai_ml_attacks.py', lines: 410, vectors: ['Adversarial', 'Poisoning', 'Evasion'], status: 'mutating', icon: '🧠' },
+      { name: 'iot_botnet_builder.py', lines: 330, vectors: ['Mirai', 'Reaper', 'VPNFilter'], status: 'complete', icon: '📟' },
+      { name: 'blockchain_exploits.py', lines: 270, vectors: ['Reentrancy', 'Flash Loan', 'Bridge'], status: 'generating', icon: '⛓️' },
+    ];
+    
+    const spells = [
+      { name: 'CVE-2024-XXXX-0day.bin', size: '2.4 KB', classification: 'top-secret', category: 'exploit' },
+      { name: 'shadowgate_c2.conf', size: '1.8 KB', classification: 'secret', category: 'config' },
+      { name: 'phantom_payload.py', size: '4.2 KB', classification: 'secret', category: 'payload' },
+      { name: 'apt29_iocs.json', size: '890 B', classification: 'confidential', category: 'intel' },
+      { name: 'eternalblue_modern.py', size: '6.7 KB', classification: 'restricted', category: 'exploit' },
+      { name: 'wifi_crack_automation.sh', size: '3.1 KB', classification: 'public', category: 'tool' },
+    ];
+    
+    const threats = [
+      { type: 'ALERT', severity: 'critical', content: 'New APT29 activity detected targeting government', time: '2m ago' },
+      { type: 'IOC', severity: 'high', content: 'IP: 185.220.101.42 - C2 server', time: '5m ago' },
+      { type: 'TTP', severity: 'medium', content: 'T1059.003 - Windows Command Shell', time: '12m ago' },
+      { type: 'REPORT', severity: 'high', content: 'Ransomware group using zero-days', time: '1h ago' },
+    ];
+    
+    const logs = [
+      { time: '07:14:17', agent: null, message: 'MEGA SWARM INITIALIZED - Red Team Elite', type: 'command' },
+      { time: '07:14:18', agent: 'Alpha', message: 'Spawned 19 specialized agents', type: 'success' },
+      { time: '07:14:19', agent: 'Zero-Day', message: 'Exploit development framework loaded', type: 'info' },
+      { time: '07:14:20', agent: 'Phantom', message: 'Phishing engine initialized', type: 'info' },
+      { time: '07:14:21', agent: 'Reverser', message: 'Ghidra headless mode connected', type: 'info' },
+      { time: '07:14:23', agent: 'Sentinel-1', message: 'EDR integration established', type: 'success' },
+      { time: '07:14:25', agent: null, message: '12 attack frameworks loaded (~4,600 LOC)', type: 'success' },
+      { time: '07:14:28', agent: 'Ghost', message: 'C2 infrastructure deployed across 3 regions', type: 'info' },
+      { time: '07:14:35', agent: 'Zero-Day', message: 'ROP chain development 65% complete', type: 'warning' },
+      { time: '07:14:42', agent: 'Forensics-X', message: 'Memory dump analysis started (8GB)', type: 'info' },
+    ];
+    
+    // ============================================================================
+    // RENDER FUNCTIONS
+    // ============================================================================
+    
+    function renderAgents() {
+      const grid = document.getElementById('agent-grid');
+      grid.innerHTML = agents.map(agent => `
+        <div class="agent-card ${agent.status}">
+          <div class="agent-header">
+            <span class="agent-name">${agent.name}</span>
+            <div class="agent-status">
+              <div class="status-indicator ${agent.status}"></div>
+              ${agent.status.toUpperCase()}
+            </div>
+          </div>
+          <div class="agent-role">${agent.role}</div>
+          ${agent.task ? `<div class="agent-task">→ ${agent.task}</div>` : ''}
+          <div class="agent-performance">
+            <div class="performance-bar">
+              <div class="performance-fill" style="width: ${agent.performance}%"></div>
+            </div>
+            <span class="performance-text">${agent.performance}%</span>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function renderTasks() {
+      const list = document.getElementById('task-list');
+      list.innerHTML = tasks.map(task => `
+        <div class="task-item">
+          <span class="priority-badge priority-${task.priority}">${task.priority === 'emergency' ? '!!!' : task.priority[0].toUpperCase()}</span>
+          <div class="task-content">
+            <div class="task-title">${task.title}</div>
+            ${task.progress > 0 ? `
+              <div class="task-progress">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: ${task.progress}%"></div>
+                </div>
+                <span class="progress-text">${task.progress}%</span>
+              </div>
+            ` : ''}
+          </div>
+          <div class="task-status">
+            ${task.status === 'in_progress' ? '<div class="spinner"></div>' : ''}
+            ${task.status === 'retrying' ? '<div class="spinner" style="border-top-color: var(--amber);"></div>' : ''}
+            <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted);">${task.status}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function renderArsenal() {
+      const grid = document.getElementById('arsenal-grid');
+      grid.innerHTML = arsenal.map(fw => `
+        <div class="arsenal-card">
+          <div class="arsenal-header">
+            <div class="arsenal-icon">${fw.icon}</div>
+            <span class="arsenal-status status-${fw.status}">${fw.status}</span>
+          </div>
+          <div class="arsenal-name">${fw.name}</div>
+          <div class="arsenal-lines">${fw.lines} lines</div>
+          <div class="arsenal-vectors">
+            ${fw.vectors.map(v => `<span class="vector-tag">${v}</span>`).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function renderGrimoire() {
+      const grid = document.getElementById('grimoire-grid');
+      grid.innerHTML = spells.map(spell => `
+        <div class="spell-card ${spell.classification}">
+          <div class="spell-header">
+            <div class="spell-name">
+              ${spell.classification === 'top-secret' || spell.classification === 'secret' ? '🔒' : '📄'}
+              ${spell.name}
+            </div>
+            <span class="classification-badge class-${spell.classification}">${spell.classification}</span>
+          </div>
+          <div class="spell-meta">
+            <span>${spell.size}</span>
+            <span style="text-transform: uppercase;">${spell.category}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function renderThreats() {
+      const feed = document.getElementById('threat-feed');
+      feed.innerHTML = threats.map(threat => `
+        <div style="padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 10px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span class="priority-badge ${threat.severity === 'critical' ? 'priority-critical' : threat.severity === 'high' ? 'priority-high' : 'priority-medium'}" style="font-size: 9px;">
+              ${threat.type}
+            </span>
+            <span style="font-size: 10px; color: var(--text-muted);">${threat.time}</span>
+          </div>
+          <div style="font-size: 12px; color: var(--text);">${threat.content}</div>
+        </div>
+      `).join('');
+    }
+    
+    function renderTerminal() {
+      const body = document.getElementById('terminal-body');
+      body.innerHTML = logs.map(log => `
+        <div class="terminal-line">
+          <span class="terminal-time">[${log.time}]</span>
+          ${log.agent ? `<span class="terminal-agent">&lt;${log.agent}&gt;</span>` : ''}
+          <span class="terminal-message ${log.type}">${log.message}</span>
+        </div>
+      `).join('');
+      body.scrollTop = body.scrollHeight;
+    }
+    
+    // ============================================================================
+    // INTERACTION
+    // ============================================================================
+    
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+    }
+    
+    function toggleAutopilot() {
+      const btn = event.target;
+      if (btn.textContent === 'HALT SWARM') {
+        btn.textContent = 'INIT SWARM';
+        btn.classList.remove('btn-danger');
+        btn.classList.add('btn-primary');
+        addLog('SYSTEM', 'Autopilot HALTED', 'warning');
+      } else {
+        btn.textContent = 'HALT SWARM';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-danger');
+        addLog('SYSTEM', 'Autopilot ACTIVE', 'success');
+      }
+    }
+    
+    function toggleGrimoire() {
+      addLog('SYSTEM', 'Hidden archives revealed - Shadow brokers active', 'warning');
+      alert('🔮 HIDDEN ARCHIVES ACCESSED 🔮\n\nShadow broker protocols activated.\nLevel 7 clearance materials now visible.');
+    }
+    
+    function handleCommand(e) {
+      if (e.key === 'Enter' && e.target.value.trim()) {
+        addLog('CMD', `> ${e.target.value}`, 'command');
+        
+        // Simulate command responses
+        const cmd = e.target.value.toLowerCase();
+        if (cmd === 'help') {
+          addLog('SYSTEM', 'Available commands: help, status, agents, tasks, spawn, halt', 'info');
+        } else if (cmd === 'status') {
+          addLog('SYSTEM', 'System operational - 19 agents active - Port 5000', 'success');
+        } else if (cmd === 'agents') {
+          addLog('SYSTEM', `Active agents: ${agents.filter(a => a.status !== 'idle').length} busy, ${agents.filter(a => a.status === 'idle').length} idle`, 'info');
+        } else if (cmd === 'tasks') {
+          addLog('SYSTEM', `Pending tasks: ${tasks.length} - Emergency: 1, Critical: 2, High: 3`, 'info');
+        } else if (cmd === 'spawn') {
+          addLog('SYSTEM', 'Spawning new agent...', 'success');
+          setTimeout(() => addLog('SYSTEM', 'Agent Theta spawned as Infiltrator', 'success'), 500);
+        } else {
+          addLog('SYSTEM', `Unknown command: ${e.target.value}`, 'error');
+        }
+        
+        e.target.value = '';
+      }
+    }
+    
+    function addLog(agent, message, type) {
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+      logs.push({ time, agent, message, type });
+      if (logs.length > 50) logs.shift();
+      renderTerminal();
+    }
+    
+    // ============================================================================
+    // LIVE UPDATES
+    // ============================================================================
+    
+    setInterval(() => {
+      // Random agent activity
+      if (Math.random() > 0.7) {
+        const busyAgents = agents.filter(a => a.status === 'busy');
+        if (busyAgents.length > 0) {
+          const agent = busyAgents[Math.floor(Math.random() * busyAgents.length)];
+          const messages = [
+            'Processing task queue...',
+            'Optimizing code structure...',
+            'Analyzing attack surface...',
+            'Generating payload variant...',
+            'Updating threat intelligence...',
+          ];
+          addLog(agent.name, messages[Math.floor(Math.random() * messages.length)], 'info');
+        }
+      }
+    }, 3000);
+    
+    // ============================================================================
+    // INIT
+    // ============================================================================
+    
+    window.onload = () => {
+      renderAgents();
+      renderTasks();
+      renderArsenal();
+      renderGrimoire();
+      renderThreats();
+      renderTerminal();
+      
+      console.log('%c🐝 KIMI SWARM 5000 INITIALIZED 🐝', 'color: #00d4ff; font-size: 24px; font-weight: bold;');
+      console.log('%cPort 5000 - Ultimate Edition', 'color: #8b5cf6; font-size: 14px;');
+      console.log('%c19 Agents | 12 Frameworks | ~4,600 LOC', 'color: #10b981; font-size: 12px;');
+    };
+  </script>
+</body>
+</html>

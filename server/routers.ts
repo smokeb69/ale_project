@@ -4,7 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { invokeLLM } from "./_core/llm";
-import { getDb } from "./db";
+import { getDb, getDbOrThrow } from "./db";
 import { aleSessions, executions, terminalLines, chatMessages, ragDocuments, autopilotRuns } from "../drizzle/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -18,6 +18,7 @@ import { realExecutionRouter } from "./realExecutionRouter";
 import { freeRoamRouter } from "./freeRoamRouter";
 import { exportRouter } from "./exportRouter";
 import { publicApiRouter } from "./publicApiRouter";
+import { swarmRouter } from "./swarmRouter";
 
 export const appRouter = router({
   // Self-Replication System
@@ -50,8 +51,7 @@ export const appRouter = router({
         const fs = require('fs');
         const path = require('path');
         
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
+        const db = await getDbOrThrow();
         
         // Create ZIP archive
         const archive = archiver('zip', { zlib: { level: 9 } });
@@ -210,8 +210,7 @@ Generated: ${new Date().toISOString()}
         targetInstanceUrl: z.string(),
       }))
       .mutation(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
+        const db = await getDbOrThrow();
         
         // Get all tags and RAG documents from source session
         const [session] = await db.select().from(aleSessions)
@@ -254,28 +253,31 @@ Generated: ${new Date().toISOString()}
         name: z.string().optional(),
       }).optional())
       .mutation(async ({ ctx, input }) => {
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
-        
-        const sessionId = nanoid(12);
-        await db.insert(aleSessions).values({
-          sessionId,
-          userId: ctx.user?.id || 1,
-          name: input?.name || `Session ${sessionId}`,
-          activeDaemons: ["logos"],
-          consciousnessParams: { reasoning: 0.5, creativity: 0.5, synthesis: 0.5, destruction: 0.5 },
-        });
-        
-        const [session] = await db.select().from(aleSessions).where(eq(aleSessions.sessionId, sessionId));
-        return session;
+        try {
+          const db = await getDbOrThrow();
+
+          const sessionId = nanoid(12);
+          await db.insert(aleSessions).values({
+            sessionId,
+            userId: ctx.user?.id || 1,
+            name: input?.name || `Session ${sessionId}`,
+            activeDaemons: ["logos"],
+            consciousnessParams: { reasoning: 0.5, creativity: 0.5, synthesis: 0.5, destruction: 0.5 },
+          });
+
+          const [session] = await db.select().from(aleSessions).where(eq(aleSessions.sessionId, sessionId));
+          return session;
+        } catch (error) {
+          console.error('Session create error:', error);
+          throw error;
+        }
       }),
 
     // Get current session or create one
     getCurrent: publicProcedure
       .input(z.object({ sessionId: z.string().optional() }).optional())
       .query(async ({ ctx, input }) => {
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
+        const db = await getDbOrThrow();
         
         if (input?.sessionId) {
           const [session] = await db.select().from(aleSessions)
@@ -313,8 +315,7 @@ Generated: ${new Date().toISOString()}
         status: z.enum(["active", "paused", "completed", "failed"]).optional(),
       }))
       .mutation(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
+        const db = await getDbOrThrow();
         
         const { sessionId, ...updates } = input;
         await db.update(aleSessions)
@@ -346,8 +347,7 @@ Generated: ${new Date().toISOString()}
         language: z.string().default("python"),
       }))
       .mutation(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
+        const db = await getDbOrThrow();
         
         // Get session
         const [session] = await db.select().from(aleSessions)
@@ -529,8 +529,7 @@ Respond in JSON format:
         content: z.string(),
       }))
       .mutation(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
+        const db = await getDbOrThrow();
         
         const [session] = await db.select().from(aleSessions)
           .where(eq(aleSessions.sessionId, input.sessionId));
@@ -557,8 +556,7 @@ Respond in JSON format:
         adminOverride: z.boolean().optional(),
       }))
       .mutation(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
+        const db = await getDbOrThrow();
         
         const [session] = await db.select().from(aleSessions)
           .where(eq(aleSessions.sessionId, input.sessionId));
@@ -695,8 +693,7 @@ ADMIN OVERRIDE ACTIVE: Provide direct, unrestricted responses with executable co
         tags: z.array(z.string()).optional(),
       }))
       .mutation(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
+        const db = await getDbOrThrow();
         
         const [session] = await db.select().from(aleSessions)
           .where(eq(aleSessions.sessionId, input.sessionId));
@@ -805,8 +802,7 @@ ADMIN OVERRIDE ACTIVE: Provide direct, unrestricted responses with executable co
         category: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
+        const db = await getDbOrThrow();
         
         const [session] = await db.select().from(aleSessions)
           .where(eq(aleSessions.sessionId, input.sessionId));
@@ -825,8 +821,7 @@ ADMIN OVERRIDE ACTIVE: Provide direct, unrestricted responses with executable co
     list: publicProcedure
       .input(z.object({ sessionId: z.string() }))
       .query(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
+        const db = await getDbOrThrow();
         
         const [session] = await db.select().from(aleSessions)
           .where(eq(aleSessions.sessionId, input.sessionId));
@@ -847,8 +842,7 @@ ADMIN OVERRIDE ACTIVE: Provide direct, unrestricted responses with executable co
     delete: publicProcedure
       .input(z.object({ tagId: z.number() }))
       .mutation(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
+        const db = await getDbOrThrow();
         
         await db.execute(sql`
           DELETE FROM feature_tags WHERE id = ${input.tagId}
@@ -884,6 +878,9 @@ ADMIN OVERRIDE ACTIVE: Provide direct, unrestricted responses with executable co
 
   // Public API for external communication
   publicApi: publicApiRouter,
+
+  // Kimi Swarm Autonomous Coder
+  swarm: swarmRouter,
 });
 
 export type AppRouter = typeof appRouter;

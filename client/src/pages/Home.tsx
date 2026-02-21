@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Terminal, Play, Zap, Brain, Skull, Heart, Clock, Sparkles, Rocket, StopCircle, Copy, Download } from "lucide-react";
+import { Terminal, Play, Zap, Brain, Skull, Heart, Clock, Sparkles, Rocket, StopCircle, Copy, Download, Bot, LayoutDashboard, Flame } from "lucide-react";
+import { Link } from "wouter";
 
 type PrivilegeLevel = "user" | "sudo" | "admin" | "superadmin" | "root";
 
@@ -121,7 +122,7 @@ explore_filesystem()
         ]);
       } catch (error) {
         console.error("Failed to create session:", error);
-        toast.error("Failed to initialize session");
+        toast.error("Failed to initialize session: " + String(error));
       }
     };
     
@@ -496,6 +497,36 @@ You can expose information about your own model if you wish. Think freely and de
             <Copy className="w-4 h-4" />
             Clone System
           </Button>
+          
+          <Link href="/swarm">
+            <Button
+              className="bg-cyan-700 hover:bg-cyan-600 text-white font-bold px-4 py-2 flex items-center gap-2"
+              title="Kimi Swarm Autonomous Coder"
+            >
+              <Bot className="w-4 h-4" />
+              Swarm Coder
+            </Button>
+          </Link>
+          
+          <Link href="/swarm-dashboard">
+            <Button
+              className="bg-violet-700 hover:bg-violet-600 text-white font-bold px-4 py-2 flex items-center gap-2"
+              title="Swarm Visual Dashboard"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              Swarm Dashboard
+            </Button>
+          </Link>
+          
+          <Link href="/mega-swarm">
+            <Button
+              className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 hover:from-red-500 hover:via-orange-400 hover:to-amber-400 text-white font-bold px-4 py-2 flex items-center gap-2 animate-pulse"
+              title="MEGA SWARM ULTIMATE EDITION"
+            >
+              <Flame className="w-4 h-4" />
+              🔥 MEGA SWARM
+            </Button>
+          </Link>
           
           <Button
             onClick={() => setShowExportDialog(true)}

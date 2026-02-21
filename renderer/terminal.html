@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kimi Terminal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: #000;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .title-bar {
+      height: 30px;
+      background: #0a0f1a;
+      border-bottom: 1px solid #1a2332;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      -webkit-app-region: drag;
+    }
+    
+    .title {
+      font-size: 11px;
+      color: #00d4ff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .window-controls {
+      display: flex;
+      gap: 6px;
+      -webkit-app-region: no-drag;
+    }
+    
+    .window-btn {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+    }
+    
+    .window-btn.close { background: #ef4444; }
+    .window-btn.minimize { background: #f59e0b; }
+    
+    #terminal {
+      flex: 1;
+      padding: 5px;
+    }
+    
+    .status-bar {
+      height: 20px;
+      background: #0a0f1a;
+      border-top: 1px solid #1a2332;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 10px;
+      color: #6b7280;
+    }
+    
+    .status-bar span { margin-right: 20px; }
+    .status-bar .cyan { color: #00d4ff; }
+    .status-bar .green { color: #10b981; }
+  </style>
+</head>
+<body>
+  <div class="title-bar">
+    <div class="title">
+      <span>⌨️</span>
+      <span>Kimi Terminal</span>
+    </div>
+    <div class="window-controls">
+      <button class="window-btn minimize" onclick="minimizeWindow()"></button>
+      <button class="window-btn close" onclick="closeWindow()"></button>
+    </div>
+  </div>
+  <div id="terminal"></div>
+  <div class="status-bar">
+    <span class="cyan">🐝 KIMI SWARM TERMINAL</span>
+    <span id="status-pid">PID: --</span>
+    <span id="status-type">Shell: --</span>
+    <span class="green" id="status-state">● CONNECTING</span>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+  <script>
+    const { ipcRenderer } = require('electron');
+    
+    const terminal = new Terminal({
+      cursorBlink: true,
+      fontSize: 13,
+      fontFamily: 'JetBrains Mono, Consolas, monospace',
+      theme: {
+        background: '#000',
+        foreground: '#e7eeff',
+        cursor: '#00d4ff',
+        selection: '#00d4ff33',
+        black: '#000',
+        red: '#ef4444',
+        green: '#10b981',
+        yellow: '#f59e0b',
+        blue: '#3b82f6',
+        magenta: '#8b5cf6',
+        cyan: '#00d4ff',
+        white: '#e7eeff'
+      }
+    });
+    
+    const fitAddon = new FitAddon.FitAddon();
+    terminal.loadAddon(fitAddon);
+    
+    terminal.open(document.getElementById('terminal'));
+    fitAddon.fit();
+    
+    // Create terminal via IPC
+    ipcRenderer.invoke('terminal:create', {}).then(result => {
+      document.getElementById('status-pid').textContent = `PID: ${result.pid}`;
+      document.getElementById('status-type').textContent = `Shell: ${result.type}`;
+      document.getElementById('status-state').textContent = '● CONNECTED';
+      document.getElementById('status-state').style.color = '#10b981';
+      
+      // Listen for terminal data
+      ipcRenderer.on(`terminal-data-${result.id}`, (event, data) => {
+        terminal.write(data);
+      });
+      
+      // Send input to terminal
+      terminal.onData(data => {
+        ipcRenderer.invoke('terminal:write', result.id, data);
+      });
+      
+      // Handle resize
+      window.addEventListener('resize', () => {
+        fitAddon.fit();
+        ipcRenderer.invoke('terminal:resize', result.id, terminal.cols, terminal.rows);
+      });
+    });
+    
+    function minimizeWindow() {
+      ipcRenderer.invoke('window:minimize');
+    }
+    
+    function closeWindow() {
+      window.close();
+    }
+  </script>
+</body>
+</html>

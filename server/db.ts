@@ -4,18 +4,35 @@ import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _lastDbError: unknown | null = null;
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
       _db = drizzle(process.env.DATABASE_URL);
+      _lastDbError = null;
     } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
+      _lastDbError = error;
+      console.error("[Database] Failed to connect:", error);
       _db = null;
     }
   }
   return _db;
+}
+
+/**
+ * Like getDb(), but throws a clear error when the DB isn't available.
+ * This is useful for API handlers so clients receive actionable messages.
+ */
+export async function getDbOrThrow() {
+  const db = await getDb();
+  if (!db) {
+    const hint = `Ensure DATABASE_URL is set and the database server is reachable.`;
+    const last = _lastDbError ? String(_lastDbError) : "no connection error captured";
+    throw new Error(`[Database] Database not available. ${hint} Last error: ${last}`);
+  }
+  return db;
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {

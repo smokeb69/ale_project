@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KIMI SWARM 5000 - REAL TERMINAL</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+  <style>
+    :root {
+      --bg: #020408;
+      --bg-panel: #0a0f1a;
+      --border: #1a2332;
+      --text: #e7eeff;
+      --cyan: #00d4ff;
+      --violet: #8b5cf6;
+      --emerald: #10b981;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .container {
+      display: grid;
+      grid-template-columns: 250px 1fr 300px;
+      grid-template-rows: 60px 1fr 30px;
+      height: 100vh;
+    }
+    
+    /* Header */
+    .header {
+      grid-column: 1 / -1;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+    
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .brand h1 {
+      font-size: 18px;
+      background: linear-gradient(135deg, var(--cyan), var(--violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-size: 12px;
+    }
+    
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--emerald);
+      animation: blink 2s infinite;
+    }
+    
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    /* Sidebar - Agents */
+    .sidebar-left {
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      padding: 15px;
+      overflow-y: auto;
+    }
+    
+    .sidebar-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-bottom: 15px;
+      letter-spacing: 1px;
+    }
+    
+    .agent-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .agent-item {
+      padding: 10px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .agent-item:hover {
+      border-color: var(--cyan);
+    }
+    
+    .agent-item.kimi {
+      border-color: var(--violet);
+      background: rgba(139, 92, 246, 0.1);
+    }
+    
+    .agent-name {
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    
+    .agent-role {
+      font-size: 10px;
+      color: #6b7280;
+    }
+    
+    .agent-status {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-left: 5px;
+    }
+    
+    .agent-status.active { background: var(--emerald); }
+    .agent-status.busy { background: orange; }
+    .agent-status.idle { background: #6b7280; }
+    
+    /* Main Terminal Area */
+    .terminal-container {
+      background: #000;
+      padding: 10px;
+      position: relative;
+    }
+    
+    .terminal-tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+    
+    .terminal-tab {
+      padding: 8px 15px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 4px 4px 0 0;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    .terminal-tab.active {
+      background: #000;
+      border-bottom-color: #000;
+    }
+    
+    #terminal {
+      height: calc(100% - 50px);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 5px;
+    }
+    
+    /* Sidebar Right - Thoughts */
+    .sidebar-right {
+      background: var(--bg-panel);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .thoughts-header {
+      padding: 15px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #6b7280;
+      letter-spacing: 1px;
+    }
+    
+    .thoughts-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+    }
+    
+    .thought-item {
+      padding: 10px;
+      background: rgba(0,0,0,0.3);
+      border-left: 2px solid var(--violet);
+      margin-bottom: 10px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    
+    .thought-source {
+      color: var(--violet);
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .thought-input-area {
+      padding: 15px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .thought-input {
+      width: 100%;
+      padding: 10px;
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      resize: none;
+    }
+    
+    .thought-btn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      background: linear-gradient(135deg, var(--violet), var(--cyan));
+      border: none;
+      border-radius: 4px;
+      color: white;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    /* Footer */
+    .footer {
+      grid-column: 1 / -1;
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 11px;
+      color: #6b7280;
+    }
+    
+    /* Kimi Chat Overlay */
+    .kimi-chat {
+      position: fixed;
+      bottom: 50px;
+      right: 20px;
+      width: 350px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      display: none;
+      flex-direction: column;
+      max-height: 400px;
+    }
+    
+    .kimi-chat.active {
+      display: flex;
+    }
+    
+    .kimi-header {
+      padding: 15px;
+      background: linear-gradient(135deg, var(--violet), var(--cyan));
+      border-radius: 10px 10px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .kimi-title {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .kimi-close {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    
+    .kimi-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      font-size: 12px;
+    }
+    
+    .kimi-message {
+      margin-bottom: 10px;
+      padding: 10px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 4px;
+    }
+    
+    .kimi-message.user {
+      background: rgba(0, 212, 255, 0.1);
+      border-left: 2px solid var(--cyan);
+    }
+    
+    .kimi-input-area {
+      padding: 15px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+    }
+    
+    .kimi-input {
+      flex: 1;
+      padding: 10px;
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+    }
+    
+    .kimi-send {
+      padding: 10px 20px;
+      background: var(--violet);
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+    }
+    
+    .kimi-toggle {
+      position: fixed;
+      bottom: 50px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--violet), var(--cyan));
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <span>🐝</span>
+        <h1>KIMI SWARM 5000 - REAL TERMINAL</h1>
+      </div>
+      <div class="status">
+        <div class="status-indicator">
+          <div class="status-dot"></div>
+          <span>SYSTEM: OPERATIONAL</span>
+        </div>
+        <div class="status-indicator">
+          <span style="color: var(--violet);">●</span>
+          <span>KIMI: ACTIVE</span>
+        </div>
+        <div class="status-indicator">
+          <span id="ws-status" style="color: orange;">●</span>
+          <span>WS: CONNECTING</span>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Left Sidebar - Agents -->
+    <aside class="sidebar-left">
+      <div class="sidebar-title">Swarm Agents</div>
+      <div class="agent-list" id="agent-list">
+        <!-- Agents loaded dynamically -->
+      </div>
+    </aside>
+    
+    <!-- Main Terminal -->
+    <main class="terminal-container">
+      <div class="terminal-tabs">
+        <div class="terminal-tab active">Terminal 1</div>
+        <div class="terminal-tab" onclick="createTerminal()">+ New</div>
+      </div>
+      <div id="terminal"></div>
+    </main>
+    
+    <!-- Right Sidebar - Thought Play -->
+    <aside class="sidebar-right">
+      <div class="thoughts-header">Thought Stream</div>
+      <div class="thoughts-container" id="thoughts">
+        <!-- Thoughts loaded dynamically -->
+      </div>
+      <div class="thought-input-area">
+        <textarea class="thought-input" id="thought-input" rows="3" placeholder="Share your thought with the swarm..."></textarea>
+        <button class="thought-btn" onclick="shareThought()">Share Thought</button>
+      </div>
+    </aside>
+    
+    <!-- Footer -->
+    <footer class="footer">
+      <div>Port 5000 | Real PTY Terminal | Kimi AI Active</div>
+      <div id="connection-info">Connecting...</div>
+    </footer>
+  </div>
+  
+  <!-- Kimi Chat -->
+  <button class="kimi-toggle" onclick="toggleKimiChat()">🤖</button>
+  <div class="kimi-chat" id="kimi-chat">
+    <div class="kimi-header">
+      <div class="kimi-title">🤖 Kimi AI</div>
+      <button class="kimi-close" onclick="toggleKimiChat()">×</button>
+    </div>
+    <div class="kimi-messages" id="kimi-messages"></div>
+    <div class="kimi-input-area">
+      <input type="text" class="kimi-input" id="kimi-input" placeholder="Talk to Kimi...">
+      <button class="kimi-send" onclick="sendToKimi()">Send</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+  <script>
+    // ============================================================================
+    // WEBSOCKET CONNECTION
+    // ============================================================================
+    
+    const ws = new WebSocket(`ws://${window.location.host}`);
+    let terminal;
+    let fitAddon;
+    
+    ws.onopen = () => {
+      console.log('[WS] Connected to swarm');
+      document.getElementById('ws-status').style.color = '#10b981';
+      document.getElementById('ws-status').nextElementSibling.textContent = 'WS: CONNECTED';
+      document.getElementById('connection-info').textContent = 'Connected to KIMI SWARM 5000';
+      
+      // Create terminal
+      ws.send(JSON.stringify({ type: 'terminal-create', cols: 80, rows: 30 }));
+    };
+    
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      
+      switch (msg.channel) {
+        case 'terminal':
+          if (terminal) {
+            terminal.write(msg.data);
+          }
+          break;
+          
+        case 'system':
+          handleSystemMessage(msg.data);
+          break;
+          
+        case 'thought-play':
+          addThought(msg.data);
+          break;
+          
+        case 'kimi':
+          addKimiMessage('kimi', msg.data.response);
+          break;
+      }
+    };
+    
+    ws.onclose = () => {
+      console.log('[WS] Disconnected');
+      document.getElementById('ws-status').style.color = '#ef4444';
+      document.getElementById('ws-status').nextElementSibling.textContent = 'WS: DISCONNECTED';
+    };
+    
+    // ============================================================================
+    // TERMINAL SETUP
+    // ============================================================================
+    
+    function initTerminal() {
+      terminal = new Terminal({
+        cursorBlink: true,
+        fontSize: 14,
+        fontFamily: '"JetBrains Mono", "Consolas", monospace',
+        theme: {
+          background: '#000',
+          foreground: '#e7eeff',
+          cursor: '#00d4ff',
+          selection: '#00d4ff33',
+          black: '#000',
+          red: '#ef4444',
+          green: '#10b981',
+          yellow: '#f59e0b',
+          blue: '#3b82f6',
+          magenta: '#8b5cf6',
+          cyan: '#00d4ff',
+          white: '#e7eeff'
+        }
+      });
+      
+      fitAddon = new FitAddon.FitAddon();
+      terminal.loadAddon(fitAddon);
+      
+      terminal.open(document.getElementById('terminal'));
+      fitAddon.fit();
+      
+      // Handle input
+      terminal.onData((data) => {
+        ws.send(JSON.stringify({ type: 'terminal-input', input: data }));
+      });
+      
+      // Handle resize
+      window.addEventListener('resize', () => {
+        fitAddon.fit();
+        ws.send(JSON.stringify({
+          type: 'terminal-resize',
+          cols: terminal.cols,
+          rows: terminal.rows
+        }));
+      });
+    }
+    
+    // ============================================================================
+    // SYSTEM MESSAGES
+    // ============================================================================
+    
+    function handleSystemMessage(data) {
+      switch (data.type) {
+        case 'welcome':
+          console.log('Welcome:', data);
+          loadAgents();
+          initTerminal();
+          break;
+          
+        case 'terminal-ready':
+          terminal.writeln('\r\n\x1b[36m╔═══════════════════════════════════════════════════════════╗\x1b[0m');
+          terminal.writeln('\x1b[36m║\x1b[0m                                                           \x1b[36m║\x1b[0m');
+          terminal.writeln('\x1b[36m║\x1b[0m   🐝 KIMI SWARM 5000 - REAL TERMINAL 🐝                  \x1b[36m║\x1b[0m');
+          terminal.writeln('\x1b[36m║\x1b[0m                                                           \x1b[36m║\x1b[0m');
+          terminal.writeln('\x1b[36m║\x1b[0m   Mode: ' + data.mode.toUpperCase().padEnd(47) + '\x1b[36m║\x1b[0m');
+          terminal.writeln('\x1b[36m║\x1b[0m   Type "help" for commands                               \x1b[36m║\x1b[0m');
+          terminal.writeln('\x1b[36m║\x1b[0m                                                           \x1b[36m║\x1b[0m');
+          terminal.writeln('\x1b[36m╚═══════════════════════════════════════════════════════════╝\x1b[0m\r\n');
+          break;
+      }
+    }
+    
+    // ============================================================================
+    // AGENTS
+    // ============================================================================
+    
+    async function loadAgents() {
+      try {
+        const res = await fetch('/api/swarm');
+        const data = await res.json();
+        
+        const list = document.getElementById('agent-list');
+        list.innerHTML = data.agents.map(agent => `
+          <div class="agent-item ${agent.id === 'AGENT-KIMI' ? 'kimi' : ''}" onclick="selectAgent('${agent.id}')">
+            <div class="agent-name">
+              ${agent.name}
+              <span class="agent-status ${agent.status}"></span>
+            </div>
+            <div class="agent-role">${agent.role}</div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load agents:', e);
+      }
+    }
+    
+    function selectAgent(id) {
+      if (id === 'AGENT-KIMI') {
+        toggleKimiChat();
+      }
+    }
+    
+    // ============================================================================
+    // THOUGHT PLAY
+    // ============================================================================
+    
+    function addThought(data) {
+      const container = document.getElementById('thoughts');
+      const div = document.createElement('div');
+      div.className = 'thought-item';
+      div.innerHTML = `
+        <div class="thought-source">${data.source}</div>
+        <div>${data.thought || data.content}</div>
+      `;
+      container.insertBefore(div, container.firstChild);
+      
+      // Keep only last 50 thoughts
+      while (container.children.length > 50) {
+        container.removeChild(container.lastChild);
+      }
+    }
+    
+    function shareThought() {
+      const input = document.getElementById('thought-input');
+      const thought = input.value.trim();
+      if (!thought) return;
+      
+      ws.send(JSON.stringify({
+        type: 'thought-share',
+        thought
+      }));
+      
+      input.value = '';
+    }
+    
+    // ============================================================================
+    // KIMI CHAT
+    // ============================================================================
+    
+    function toggleKimiChat() {
+      const chat = document.getElementById('kimi-chat');
+      chat.classList.toggle('active');
+    }
+    
+    function sendToKimi() {
+      const input = document.getElementById('kimi-input');
+      const message = input.value.trim();
+      if (!message) return;
+      
+      addKimiMessage('user', message);
+      
+      ws.send(JSON.stringify({
+        type: 'kimi-message',
+        message
+      }));
+      
+      input.value = '';
+    }
+    
+    function addKimiMessage(type, text) {
+      const container = document.getElementById('kimi-messages');
+      const div = document.createElement('div');
+      div.className = `kimi-message ${type}`;
+      div.textContent = text;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+    
+    // Handle enter key in inputs
+    document.getElementById('thought-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        shareThought();
+      }
+    });
+    
+    document.getElementById('kimi-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendToKimi();
+      }
+    });
+    
+    // Load initial thoughts
+    fetch('/api/thoughts?limit=10')
+      .then(res => res.json())
+      .then(thoughts => {
+        thoughts.reverse().forEach(t => addThought(t));
+      });
+  </script>
+</body>
+</html>

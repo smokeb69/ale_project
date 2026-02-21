@@ -28,6 +28,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
+  console.log('NODE_ENV:', process.env.NODE_ENV);
   const app = express();
   const server = createServer(app);
   // Configure body parser with larger size limit for file uploads
@@ -44,9 +45,18 @@ async function startServer() {
     })
   );
   // development mode uses Vite, production mode uses static files
+  console.log('Setting up client serving...');
   if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
+    console.log('Using Vite dev server');
+    try {
+      await setupVite(app, server);
+      console.log('Vite setup complete');
+    } catch (error) {
+      console.error('Vite setup failed:', error);
+      serveStatic(app);
+    }
   } else {
+    console.log('Using static files');
     serveStatic(app);
   }
 
